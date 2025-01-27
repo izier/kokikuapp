@@ -1,0 +1,28 @@
+import 'package:flutter/material.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = LocalizationService.of(context)!;
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(localizations.translate('appTitle')),
+          ],
+        )
+      ),
+      body: Center(
+        child: Text('Welcome to your app!'),
+      ),
+    );
+  }
+}

@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"kokiku-app","appId":"1:993123681789:android:ea42a8be67f98d7e644594","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"kokiku-app","configurations":{"android":"1:993123681789:android:ea42a8be67f98d7e644594","ios":"1:993123681789:ios:8002c84037398f76644594"}}}}}}
