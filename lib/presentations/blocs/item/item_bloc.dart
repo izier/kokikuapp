@@ -66,8 +66,6 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
       }
     });
 
-
-
     // Event handler for editing an existing item
     on<EditItem>((event, emit) async {
       emit(ItemLoading());
@@ -95,6 +93,34 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
       }
     });
 
+    // Event handler for editing a category
+    on<EditCategory>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('categories').doc(event.categoryId).update({'name': event.categoryName});
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error editing category: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to edit category: $e'));
+      }
+    });
+
+    // Event handler for deleting a category
+    on<DeleteCategory>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('categories').doc(event.categoryId).delete();
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error deleting category: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to delete category: $e'));
+      }
+    });
+
     // Event handler for adding a new location
     on<AddLocation>((event, emit) async {
       emit(ItemLoading());
@@ -109,6 +135,34 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
       }
     });
 
+    // Event handler for editing a location
+    on<EditLocation>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('locations').doc(event.locationId).update({'name': event.name});
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error editing location: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to edit location: $e'));
+      }
+    });
+
+    // Event handler for deleting a location
+    on<DeleteLocation>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('locations').doc(event.locationId).delete();
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error deleting location: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to delete location: $e'));
+      }
+    });
+
     // Event handler for adding a new sublocation
     on<AddSublocation>((event, emit) async {
       emit(ItemLoading());
@@ -120,6 +174,34 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
         log("Error adding sublocation: $e");
         log("Stack trace: $stackTrace");
         emit(ItemError('Failed to add sublocation: $e'));
+      }
+    });
+
+    // Event handler for editing a sublocation
+    on<EditSublocation>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('sublocations').doc(event.sublocationId).update({'name': event.name});
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error editing sublocation: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to edit sublocation: $e'));
+      }
+    });
+
+    // Event handler for deleting a sublocation
+    on<DeleteSublocation>((event, emit) async {
+      emit(ItemLoading());
+      try {
+        await _firestore.collection('sublocations').doc(event.sublocationId).delete();
+        emit(ItemSuccess());
+        add(LoadItemPage());
+      } catch (e, stackTrace) {
+        log("Error deleting sublocation: $e");
+        log("Stack trace: $stackTrace");
+        emit(ItemError('Failed to delete sublocation: $e'));
       }
     });
   }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 
 class CategoryDropdown extends StatelessWidget {
   final List<ItemCategory> categories;
-  final String? selectedCategory;
-  final Function(String?) onChanged;
+  final ItemCategory? selectedCategory;
+  final Function(ItemCategory?) onChanged;
 
   const CategoryDropdown({
     super.key,
@@ -20,29 +21,42 @@ class CategoryDropdown extends StatelessWidget {
       children: [
         const Text(
           'Category',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: selectedCategory,
-          items: [
-            ...categories.map((category) {
-              return DropdownMenuItem<String>(
-                value: category.name,
-                child: Text(category.name),
-              );
-            }),
-            const DropdownMenuItem<String>(
-              value: 'add',
-              child: Text('Add New Category'),
-            ),
+        DropdownSearch<ItemCategory>(
+          selectedItem: selectedCategory,
+          compareFn: (item, selectedItem) => item.id == selectedItem.id,
+          items: (filter, infiniteScrollProps) => [
+            ItemCategory(id: 'add', name: 'Add Category'),
+            ...categories.map((e) => e)
           ],
+          itemAsString: (item) => item.name,
           onChanged: onChanged,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
+          popupProps: PopupProps.menu(
+            fit: FlexFit.loose,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: 'Search',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            showSearchBox: true,
+            constraints: BoxConstraints(maxHeight: 300), // Adjust the height of the dropdown menu
           ),
-          validator: (value) =>
-          value == null || value.isEmpty ? 'Select a category' : null,
+          enabled: true,
+          decoratorProps: DropDownDecoratorProps(
+            decoration: InputDecoration(
+              hintText: 'Select a category',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
       ],
     );

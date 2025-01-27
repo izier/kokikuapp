@@ -14,6 +14,7 @@ import 'package:kokiku/presentations/blocs/item/item_bloc.dart';
 import 'package:kokiku/presentations/blocs/profile/profile_bloc.dart';
 import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
 import 'package:kokiku/presentations/pages/inventory/inventory_page.dart';
+import 'package:kokiku/presentations/pages/inventory/inventory_settings_page.dart';
 import 'package:kokiku/presentations/pages/main_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/landing_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/onboarding_page.dart';
@@ -113,6 +114,7 @@ class _MyAppState extends State<MyApp> {
           '/onboarding': (context) => OnboardingPage(),
           '/landing': (context) => LandingPage(),
           '/addedit': (context) => AddEditItemPage(),
+          '/inventorysettings': (context) => InventorySettingsPage(),
         },
       ),
     );

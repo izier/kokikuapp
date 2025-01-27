@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
 
 class SublocationDropdown extends StatelessWidget {
   final List<Sublocation> sublocations;
-  final String? selectedSublocation;
-  final Function(String?) onChanged;
-  final dynamic selectedLocation;
+  final Sublocation? selectedSublocation;
+  final Function(Sublocation?) onChanged;
+  final Location? selectedLocation;
 
   const SublocationDropdown({
     super.key,
@@ -18,7 +20,7 @@ class SublocationDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selectedLocation == null) {
-      return const SizedBox(); // Return empty space if no location selected
+      return const SizedBox(); // Return empty space if no location is selected
     }
 
     return Column(
@@ -26,29 +28,46 @@ class SublocationDropdown extends StatelessWidget {
       children: [
         const Text(
           'Sublocation',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: selectedSublocation,
-          items: [
-            ...sublocations.map((sublocation) {
-              return DropdownMenuItem<String>(
-                value: sublocation.name,
-                child: Text(sublocation.name),
-              );
-            }),
-            const DropdownMenuItem<String>(
-              value: 'add',
-              child: Text('Add New Sublocation'),
+        DropdownSearch<Sublocation>(
+          selectedItem: selectedSublocation,
+          compareFn: (item, selectedItem) => item.id == selectedItem.id,
+          items: (filter, infiniteScrollProps) {
+            return [
+              Sublocation(id: 'add', locationId: 'add', name: 'Add New Sublocation'), // Add new option
+              ...sublocations.where((sublocation) => sublocation.locationId == selectedLocation!.id).map((e) => e)
+            ];
+          },
+          itemAsString: (item) => item.name, // Display the name of sublocation
+          onChanged: (Sublocation? selected) {
+            onChanged(selected); // Call onChanged with Sublocation object
+          },
+          popupProps: PopupProps.menu(
+            fit: FlexFit.loose,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: 'Search sublocation...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
-          ],
-          onChanged: onChanged,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
+            showSearchBox: true,
+            constraints: BoxConstraints(maxHeight: 300), // Adjust dropdown height
           ),
-          validator: (value) =>
-          value == null || value.isEmpty ? 'Select a sublocation' : null,
+          enabled: true,
+          decoratorProps: DropDownDecoratorProps(
+            decoration: InputDecoration(
+              hintText: 'Select a sublocation',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
       ],
     );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/constants/variables/theme.dart';
+import 'package:kokiku/datas/models/remote/item.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
+import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -41,9 +43,9 @@ class _InventoryPageState extends State<InventoryPage> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/addedit').whenComplete(loadData);
+              Navigator.pushNamed(context, '/inventorysettings').whenComplete(loadData);
             },
-            icon: const Icon(Icons.add, color: AppTheme.primaryColor),
+            icon: const Icon(Icons.list, color: AppTheme.primaryColor),
           ),
         ],
       ),
@@ -221,7 +223,7 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  Widget _buildItemTile(BuildContext context, dynamic item) {
+  Widget _buildItemTile(BuildContext context, Item item) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -229,13 +231,9 @@ class _InventoryPageState extends State<InventoryPage> {
       color: Colors.grey.shade100,
       child: ListTile(
         onTap: () {
-          Navigator.pushNamed(
+          Navigator.push(
             context,
-            '/addedit',
-            arguments: {
-              'id': item.id,
-              'data': item.toMap(),
-            },
+            MaterialPageRoute(builder: (context) => AddEditItemPage(item: item))
           ).whenComplete(loadData);
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

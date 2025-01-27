@@ -42,9 +42,10 @@ class Item {
     );
   }
 
-  // Method to convert Item to Firestore format
+  // Convert Item to Map<String, dynamic>
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'description': description,
       'category': category,
@@ -53,8 +54,24 @@ class Item {
       'expDate': expDate,
       'location': location,
       'sublocation': sublocation,
-      'userId': userId, // Include userId when converting to map
+      'userId': userId,
     };
+  }
+
+  // Convert Map<String, dynamic> to Item
+  factory Item.fromMap(Map<String, dynamic> map) {
+    return Item(
+      id: map['id'],
+      name: map['name'],
+      description: map['description'],
+      category: map['category'],
+      quantity: map['quantity'],
+      regDate: map['regDate'],
+      expDate: map['expDate'],
+      location: map['location'],
+      sublocation: map['sublocation'],
+      userId: map['userId'],
+    );
   }
 
   // The copyWith function to create a new Item with updated fields
