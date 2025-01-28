@@ -38,7 +38,7 @@ class SublocationDropdown extends StatelessWidget {
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
           items: (filter, infiniteScrollProps) {
             return [
-              Sublocation(id: 'add', locationId: 'add', name: 'Add New Sublocation'), // Add new option
+              Sublocation(id: 'add', locationId: 'add', name: 'Add New Sublocation', userId: 'add'), // Add new option
               ...sublocations.where((sublocation) => sublocation.locationId == selectedLocation!.id).map((e) => e)
             ];
           },

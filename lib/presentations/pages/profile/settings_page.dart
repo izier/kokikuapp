@@ -63,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: Text('English'),
                 onTap: () {
                   setState(() {
-                    MyApp.setLocale(context, const Locale('en'));
+                    MyApp.updateLocale(context, const Locale('en'));
                   });
                   Navigator.pop(context);
                 },
@@ -73,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: Text('Bahasa Indonesia'),
                 onTap: () {
                   setState(() {
-                    MyApp.setLocale(context, const Locale('id'));
+                    MyApp.updateLocale(context, const Locale('id'));
                   });
                   Navigator.pop(context);
                 },

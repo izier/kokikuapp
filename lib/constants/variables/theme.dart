@@ -5,19 +5,18 @@ class AppTheme {
   static const Color secondaryColor = Color(0xFFFA737B); // Complementary color
   static const Color backgroundColorLight = Colors.white; // Light background
   static const Color backgroundColorDark = Color(0xFF1C1C1E); // Dark background
+  static const Color lightGrey = Color(0xFFE0E0E0); // Light background
 
   static const TextStyle _baseTextStyle = TextStyle(
     fontFamily: 'Nunito',
     fontSize: 16,
     fontWeight: FontWeight.w400, // Reduced weight for sleeker text
-    color: Colors.black,
   );
 
   static const TextStyle _headingTextStyle = TextStyle(
     fontFamily: 'Poppins',
     fontSize: 16,
     fontWeight: FontWeight.w500, // Softer boldness for headings
-    color: Colors.black,
   );
 
   // Light Theme
@@ -32,7 +31,8 @@ class AppTheme {
       centerTitle: true,
       titleTextStyle: _headingTextStyle.copyWith(
         fontWeight: FontWeight.w700,
-        fontSize: 18
+        fontSize: 18,
+        color: Colors.black
       )
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -89,11 +89,11 @@ class AppTheme {
       hintStyle: TextStyle(color: Colors.black54),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: primaryColor),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       border: OutlineInputBorder(
         borderSide: BorderSide(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
     expansionTileTheme: ExpansionTileThemeData(
@@ -105,6 +105,9 @@ class AppTheme {
     dropdownMenuTheme: DropdownMenuThemeData(
       textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
     ),
+    // cardTheme: CardThemeData(
+    //   color: lightGrey
+    // )
   );
 
   // Dark Theme
@@ -116,6 +119,12 @@ class AppTheme {
       backgroundColor: backgroundColorDark,
       foregroundColor: Colors.white,
       elevation: 0,
+      centerTitle: true,
+      titleTextStyle: _headingTextStyle.copyWith(
+        fontWeight: FontWeight.w700,
+        fontSize: 18,
+        color: Colors.white
+      )
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
@@ -171,11 +180,11 @@ class AppTheme {
       hintStyle: TextStyle(color: Colors.white70),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: primaryColor),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       border: OutlineInputBorder(
         borderSide: BorderSide(color: Colors.grey[600]!),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
     expansionTileTheme: ExpansionTileThemeData(
@@ -187,5 +196,8 @@ class AppTheme {
     dropdownMenuTheme: DropdownMenuThemeData(
       textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
     ),
+    // cardTheme: CardThemeData(
+    //   color: Colors.black
+    // )
   );
 }

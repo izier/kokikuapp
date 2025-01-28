@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/presentations/blocs/profile/profile_bloc.dart';
 import 'package:kokiku/presentations/pages/profile/settings_page.dart';
 import 'package:kokiku/presentations/widgets/no_internet.dart';
@@ -22,7 +21,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final localization = LocalizationService.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile'),

@@ -14,7 +14,16 @@ import 'package:kokiku/presentations/widgets/sublocation_dropdown.dart';
 
 class AddEditItemPage extends StatefulWidget {
   final Item? item;
-  const AddEditItemPage({this.item, super.key});
+  final List<ItemCategory>? categories;
+  final List<Location>? locations;
+  final List<Sublocation>? sublocations;
+  const AddEditItemPage({
+    this.item,
+    this.categories,
+    this.locations,
+    this.sublocations,
+    super.key
+  });
 
   @override
   State<AddEditItemPage> createState() => _AddEditItemPageState();
@@ -36,159 +45,183 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   void initState() {
     super.initState();
     context.read<ItemBloc>().add(LoadItemPage());
+    quantityController.text = '0';
+    if (widget.item != null) {
+      nameController.text = widget.item!.name;
+      quantityController.text = widget.item!.quantity.toString();
+      descriptionController.text = widget.item!.description ?? '';
+      regDateController.text = widget.item!.regDate ?? '';
+      expDateController.text = widget.item!.expDate ?? '';
+      final selectedCategories = widget.categories!.where((category) => category.id == widget.item!.categoryId);
+      final selectedLocations = widget.locations!.where((location) => location.id == widget.item!.locationId);
+      final selectedSublocations = widget.sublocations!.where((sublocation) => sublocation.id == widget.item!.sublocationId);
+      if (selectedCategories.isNotEmpty) {
+        selectedCategory = selectedCategories.first;
+      }
+      if (selectedLocations.isNotEmpty) {
+        selectedLocation = selectedLocations.first;
+      }
+      if (selectedSublocations.isNotEmpty) {
+        selectedSublocation = selectedSublocations.first;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.item == null ? 'Add Item' : 'Edit Item'),
-      ),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: BlocListener<ItemBloc, ItemState>(
-              listener: (context, state) {
-                if (state is ItemError) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-                }
-              },
-              child: BlocBuilder<ItemBloc, ItemState>(
-                builder: (context, state) {
-                  if (state is ItemLoading) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state is ItemLoaded) {
-                    if (widget.item != null) {
-                      nameController.text = widget.item!.name;
-                      quantityController.text = widget.item!.quantity.toString();
-                      descriptionController.text = widget.item!.description ?? '';
-                      regDateController.text = widget.item!.regDate ?? '';
-                      expDateController.text = widget.item!.expDate ?? '';
-                    }
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Form(
-                        key: formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CategoryDropdown(
-                              categories: state.categories,
-                              selectedCategory: selectedCategory,
-                              onChanged: (value) {
-                                if (value?.id == 'add') {
-                                  _showAddCategoryModal(context);
-                                } else {
-                                  setState(() => selectedCategory = value);
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Name Text Field
-                            _buildTextField('Name', nameController, 'Enter a name'),
-                            const SizedBox(height: 16),
-
-                            LocationDropdown(
-                              locations: state.locations,
-                              selectedLocation: selectedLocation,
-                              onChanged: (value) {
-                                if (value!.id == 'add') {
-                                  _showAddLocationModal(context);
-                                } else {
-                                  setState(() => selectedLocation = value);
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 16),
-
-                            SublocationDropdown(
-                              sublocations: state.sublocations,
-                              selectedLocation: selectedLocation,
-                              selectedSublocation: selectedSublocation,
-                              onChanged: (value) {
-                                if (value!.id == 'add') {
-                                  _showAddSublocationModal(context, selectedLocation!.id);
-                                } else {
-                                  setState(() => selectedSublocation = value);
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Quantity Row
-                            _buildQuantityRow(),
-                            const SizedBox(height: 16),
-
-                            // Registration Date
-                            _buildDatePicker('Registration Date', regDateController, 'Select a registration date'),
-                            const SizedBox(height: 16),
-
-                            // Expiry Date
-                            _buildDatePicker('Expiry Date', expDateController, 'Select an expiry date'),
-                            const SizedBox(height: 16),
-
-                            // Description
-                            _buildTextField('Description', descriptionController, 'Fill a description i.e. "1L of Milk"'),
-                            const SizedBox(height: 16),
-
-                            // Submit Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  _submitForm(widget.item);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                child: Text(
-                                  widget.item == null ? 'Add Item' : 'Save Changes',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return Center(child: Text('Error loading categories, locations, or sublocations'));
-                },
-              ),
-            ),
-          ),
-          isAddMode ? InkWell(
-            onTap: () {
-              setState(() {
-                isAddMode = false;
-                Navigator.pop(context);
-              });
-            },
-            child: Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height,
-              color: Colors.black.withValues(alpha: 0.5),
-            ),
-          ) : Container()
+        actions: [
+          widget.item != null ? IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => _showDeleteConfirmationDialog(),
+          ) : Container(),
         ],
+      ),
+      body: SafeArea(
+        child: BlocListener<ItemBloc, ItemState>(
+          listener: (context, state) {
+            if (state is ItemError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            }
+          },
+          child: BlocBuilder<ItemBloc, ItemState>(
+            builder: (context, state) {
+              if (state is ItemLoading) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (state is ItemLoaded) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CategoryDropdown(
+                          categories: state.categories,
+                          selectedCategory: selectedCategory,
+                          onChanged: (value) {
+                            if (value?.id == 'add') {
+                              _showAddCategoryModal(context);
+                            } else {
+                              log('selectedCategory: ${value!.name}');
+                              setState(() => selectedCategory = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Name Text Field
+                        _buildTextField('Name', nameController, 'Enter a name'),
+                        const SizedBox(height: 16),
+
+                        LocationDropdown(
+                          locations: state.locations,
+                          selectedLocation: selectedLocation,
+                          onChanged: (value) {
+                            if (value!.id == 'add') {
+                              _showAddLocationModal(context);
+                            } else {
+                              setState(() => selectedLocation = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        SublocationDropdown(
+                          sublocations: state.sublocations,
+                          selectedLocation: selectedLocation,
+                          selectedSublocation: selectedSublocation,
+                          onChanged: (value) {
+                            if (value!.id == 'add') {
+                              _showAddSublocationModal(context, selectedLocation!.id);
+                            } else {
+                              setState(() => selectedSublocation = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Quantity Row
+                        _buildQuantityRow(),
+                        const SizedBox(height: 16),
+
+                        // Registration Date
+                        _buildDatePicker('Registration Date', regDateController, 'Select a registration date'),
+                        const SizedBox(height: 16),
+
+                        // Expiry Date
+                        _buildDatePicker('Expiry Date', expDateController, 'Select an expiry date'),
+                        const SizedBox(height: 16),
+
+                        // Description
+                        _buildTextField('Description', descriptionController, null),
+                        const SizedBox(height: 16),
+
+                        // Submit Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
+                                _submitForm(Item(
+                                  id: widget.item?.id ?? '',
+                                  name: nameController.text,
+                                  categoryId: selectedCategory != null ? selectedCategory!.id : '',
+                                  locationId: selectedLocation != null ? selectedLocation!.id : '',
+                                  sublocationId: selectedSublocation != null ? selectedSublocation!.id : '',
+                                  description: descriptionController.text,
+                                  quantity: int.parse(quantityController.text),
+                                  regDate: regDateController.text,
+                                  expDate: expDateController.text,
+                                ));
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: Text(
+                              widget.item == null ? 'Add Item' : 'Save Changes',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return Center(child: Text('Error loading categories, locations, or sublocations'));
+            },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String? validationMessage) {
+  Widget _buildTextField(String label, TextEditingController controller, String? validationMessage, {bool isNumber = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return validationMessage;
+            }
+            if (isNumber && int.tryParse(value) == null) {
+              return 'Please enter a valid number.';
+            }
+            return null;
+          },
           decoration: InputDecoration(
             hintText: validationMessage,
             border: OutlineInputBorder(
@@ -282,24 +315,32 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     );
   }
 
-  void _submitForm(Item? item) {
+  void _submitForm(Item item) {
     if (formKey.currentState!.validate()) {
-      final itemData = Item(
-        id: item == null ? '' : item.id,
-        name: nameController.text,
-        category: selectedCategory!.name,
-        location: selectedLocation!.name,
-        sublocation: selectedSublocation!.name,
-        description: descriptionController.text,
-        quantity: int.parse(quantityController.text),
-        regDate: regDateController.text,
-        expDate: expDateController.text,
-      );
+      // if (selectedCategory == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Please select a category.')),
+      //   );
+      //   return;
+      // }
+      // if (selectedLocation == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Please select a location.')),
+      //   );
+      //   return;
+      // }
+      // if (selectedSublocation == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Please select a sublocation.')),
+      //   );
+      //   return;
+      // }
 
-      if (item == null) {
-        context.read<ItemBloc>().add(AddItem(itemData));
+      // Submit the item
+      if (widget.item == null) {
+        context.read<ItemBloc>().add(AddItem(item));
       } else {
-        context.read<ItemBloc>().add(EditItem(itemData.id, itemData)); // Update existing item
+        context.read<ItemBloc>().add(EditItem(item.id, item));
       }
 
       Navigator.pop(context);
@@ -308,12 +349,14 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   void _showAddCategoryModal(BuildContext context) {
     final controller = TextEditingController();
-    setState(() {
-      isAddMode = true;
-    });
+
+    // Show the modal bottom sheet
     showBottomSheet(
       context: context,
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black, width: 1)
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -336,10 +379,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               child: ElevatedButton(
                 onPressed: () {
                   context.read<ItemBloc>().add(AddCategory(controller.text.trim()));
-                  setState(() {
-                    isAddMode = false;
-                  });
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Close the bottom sheet after adding
                 },
                 child: const Text('Add'),
               ),
@@ -352,12 +392,13 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   void _showAddLocationModal(BuildContext context) {
     final controller = TextEditingController();
-    setState(() {
-      isAddMode = true;
-    });
+
     showBottomSheet(
       context: context,
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 1)
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -380,9 +421,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               child: ElevatedButton(
                 onPressed: () {
                   context.read<ItemBloc>().add(AddLocation(controller.text.trim()));
-                  setState(() {
-                    isAddMode = false;
-                  });
                   Navigator.pop(context);
                 },
                 child: const Text('Add'),
@@ -396,12 +434,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   void _showAddSublocationModal(BuildContext context, String locationId) {
     final controller = TextEditingController();
-    setState(() {
-      isAddMode = true;
-    });
     showBottomSheet(
       context: context,
-      builder: (_) => Padding(
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 1)
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -424,9 +462,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               child: ElevatedButton(
                 onPressed: () {
                   context.read<ItemBloc>().add(AddSublocation(locationId, controller.text.trim()));
-                  setState(() {
-                    isAddMode = false;
-                  });
                   Navigator.pop(context);
                 },
                 child: const Text('Add'),
@@ -434,6 +469,31 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Item'),
+        content: const Text('Are you sure you want to delete this item?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              context.read<ItemBloc>().add(DeleteItem(widget.item!.id));
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

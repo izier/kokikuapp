@@ -30,7 +30,7 @@ class CategoryDropdown extends StatelessWidget {
           selectedItem: selectedCategory,
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
           items: (filter, infiniteScrollProps) => [
-            ItemCategory(id: 'add', name: 'Add Category'),
+            ItemCategory(id: 'add', name: 'Add Category', userId: 'add'),
             ...categories.map((e) => e)
           ],
           itemAsString: (item) => item.name,

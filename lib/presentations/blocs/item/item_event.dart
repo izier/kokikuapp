@@ -19,13 +19,22 @@ class AddItem extends ItemEvent {
 }
 
 class EditItem extends ItemEvent {
-  final String itemId;
+  final String id;
   final Item itemData;
 
-  const EditItem(this.itemId, this.itemData);
+  const EditItem(this.id, this.itemData);
 
   @override
-  List<Object> get props => [itemId, itemData];
+  List<Object> get props => [itemData];
+}
+
+class DeleteItem extends ItemEvent {
+  final String id;
+
+  const DeleteItem(this.id);
+
+  @override
+  List<Object> get props => [id];
 }
 
 class AddCategory extends ItemEvent {

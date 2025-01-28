@@ -16,13 +16,17 @@ class HomePage extends StatelessWidget {
               height: 24,
             ),
             const SizedBox(width: 8),
-            Text(localizations.translate('appTitle')),
+            Text(
+              localizations.translate('appTitle'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold
+              )
+            ),
           ],
         )
       ),
-      body: Center(
-        child: Text('Welcome to your app!'),
-      ),
+      body: Container(),
     );
   }
 }

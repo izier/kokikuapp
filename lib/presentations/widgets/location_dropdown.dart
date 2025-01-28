@@ -6,16 +6,30 @@ class LocationDropdown extends StatelessWidget {
   final List<Location> locations;
   final Location? selectedLocation;
   final Function(Location?) onChanged;
+  final bool? disableToAdd;
 
   const LocationDropdown({
     super.key,
     required this.locations,
     required this.selectedLocation,
     required this.onChanged,
+    this.disableToAdd,
   });
 
   @override
   Widget build(BuildContext context) {
+    List<Location> usedList;
+
+    if (disableToAdd != null) {
+      usedList = [
+        ...locations.map((e) => e),
+      ];
+    } else {
+      usedList = [
+        Location(id: 'add', name: 'Add New Location', userId: 'add'),
+        ...locations.map((e) => e),
+      ];
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -29,10 +43,7 @@ class LocationDropdown extends StatelessWidget {
         DropdownSearch<Location>(
           selectedItem: selectedLocation,
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
-          items: (filter, infiniteScrollProps) => [
-            Location(id: 'add', name: 'Add New Location'), // Option for adding a new location
-            ...locations.map((e) => e),
-          ],
+          items: (filter, infiniteScrollProps) => usedList,
           itemAsString: (item) => item.name,
           onChanged: onChanged,
           popupProps: PopupProps.menu(
@@ -57,6 +68,9 @@ class LocationDropdown extends StatelessWidget {
               ),
             ),
           ),
+          dropdownBuilder: (context, selectedItem) {
+            return Text(selectedItem?.name ?? '');
+          },
         ),
       ],
     );

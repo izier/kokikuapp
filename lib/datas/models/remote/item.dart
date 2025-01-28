@@ -4,25 +4,25 @@ class Item {
   final String id;
   final String name;
   final String? description;
-  final String category;
-  final int quantity;
+  final String? categoryId;
+  final int? quantity;
   final String? regDate;
   final String? expDate;
-  final String? location;
-  final String? sublocation;
-  final String? userId; // Add userId
+  final String? locationId;
+  final String? sublocationId;
+  final String? userId;
 
   Item({
     required this.id,
     required this.name,
     this.description,
-    required this.category,
-    required this.quantity,
+    this.categoryId,
+    this.quantity,
     this.regDate,
     this.expDate,
-    this.location,
-    this.sublocation,
-    this.userId, // Include userId in constructor
+    this.locationId,
+    this.sublocationId,
+    this.userId,
   });
 
   // Factory constructor to create an Item from Firestore DocumentSnapshot
@@ -31,29 +31,28 @@ class Item {
     return Item(
       id: doc.id,
       name: data['name'] ?? '',
-      description: data['description'] ?? '',
-      category: data['category'] ?? '',
+      description: data['description'],
+      categoryId: data['categoryId'] ?? '',
       quantity: data['quantity'] ?? 0,
-      regDate: data['regDate'] ?? '',
-      expDate: data['expDate'] ?? '',
-      location: data['location'] ?? '',
-      sublocation: data['sublocation'] ?? '',
-      userId: data['userId'], // Parse userId from Firestore document
+      regDate: data['regDate'],
+      expDate: data['expDate'],
+      locationId: data['locationId'],
+      sublocationId: data['sublocationId'],
+      userId: data['userId'],
     );
   }
 
   // Convert Item to Map<String, dynamic>
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'description': description,
-      'category': category,
+      'categoryId': categoryId,
       'quantity': quantity,
       'regDate': regDate,
       'expDate': expDate,
-      'location': location,
-      'sublocation': sublocation,
+      'locationId': locationId,
+      'sublocationId': sublocationId,
       'userId': userId,
     };
   }
@@ -64,12 +63,12 @@ class Item {
       id: map['id'],
       name: map['name'],
       description: map['description'],
-      category: map['category'],
+      categoryId: map['categoryId'],
       quantity: map['quantity'],
       regDate: map['regDate'],
       expDate: map['expDate'],
-      location: map['location'],
-      sublocation: map['sublocation'],
+      locationId: map['locationId'],
+      sublocationId: map['sublocationId'],
       userId: map['userId'],
     );
   }
@@ -79,24 +78,24 @@ class Item {
     String? id,
     String? name,
     String? description,
-    String? category,
+    String? categoryId,
     int? quantity,
     String? regDate,
     String? expDate,
-    String? location,
-    String? sublocation,
+    String? locationId,
+    String? sublocationId,
     String? userId,
   }) {
     return Item(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       quantity: quantity ?? this.quantity,
       regDate: regDate ?? this.regDate,
       expDate: expDate ?? this.expDate,
-      location: location ?? this.location,
-      sublocation: sublocation ?? this.sublocation,
+      locationId: locationId ?? this.locationId,
+      sublocationId: sublocationId ?? this.sublocationId,
       userId: userId ?? this.userId,
     );
   }

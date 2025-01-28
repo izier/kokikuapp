@@ -22,38 +22,29 @@ import 'package:kokiku/presentations/pages/profile/profile_page.dart';
 import 'package:kokiku/presentations/pages/shopping_list/shopping_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<bool> checkIfFirstLaunch() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
-
-  // If it's the first launch, set 'isFirstLaunch' to false
-  if (isFirstLaunch) {
-    await prefs.setBool(Prefs.isFirstLaunch, false);
-  }
-
-  return isFirstLaunch;
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final notificationService = NotificationService();
-  await notificationService.init();
-  await notificationService.requestPermission();
+  // Initialize Firebase and Notification Service
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService().initialize();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Set up dependency injection
+  setupLocator();
 
+  // Check first launch status
+  bool isFirstLaunch = await checkIfFirstLaunch();
+
+  runApp(MyApp(isFirstLaunch: isFirstLaunch));
+}
+
+Future<bool> checkIfFirstLaunch() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isFirstLaunch = prefs.getBool(Prefs.isFirstLaunch) ?? true;
-
   if (isFirstLaunch) {
     await prefs.setBool(Prefs.isFirstLaunch, false);
   }
-
-  setupLocator();
-  runApp(MyApp(isFirstLaunch: isFirstLaunch));
+  return isFirstLaunch;
 }
 
 class MyApp extends StatefulWidget {
@@ -64,19 +55,21 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 
-  // Method to update the locale
-  static void setLocale(BuildContext context, Locale newLocale) {
-    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
-    state?.setState(() {
-      state._locale = newLocale;
-    });
+  // Method to update the locale dynamically
+  static void updateLocale(BuildContext context, Locale newLocale) {
+    final state = context.findAncestorStateOfType<_MyAppState>();
+    state?.updateLocale(newLocale);
   }
 }
 
 class _MyAppState extends State<MyApp> {
-  // Check if the user is signed in
-  User? user = FirebaseAuth.instance.currentUser;
-  Locale _locale = Locale('en'); // Default language is English
+  Locale _locale = const Locale('en'); // Default locale
+
+  void updateLocale(Locale newLocale) {
+    setState(() {
+      _locale = newLocale;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,20 +85,18 @@ class _MyAppState extends State<MyApp> {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        locale: _locale,
-        // Automatically use the device's locale
+        locale: _locale, // Use the updated locale
         localizationsDelegates: [
           LocalizationService.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: [
-          const Locale('en', ''), // English
-          const Locale('id', ''), // Indonesian
+        supportedLocales: const [
+          Locale('en', ''), // English
+          Locale('id', ''), // Indonesian
         ],
-        // Flutter will use the device's locale if 'locale' is not specified
-        initialRoute: widget.isFirstLaunch ? '/onboarding' : (user != null) ? '/' : '/landing',
+        initialRoute: _determineInitialRoute(),
         routes: {
           '/': (context) => MainPage(),
           '/inventory': (context) => InventoryPage(),
@@ -113,10 +104,17 @@ class _MyAppState extends State<MyApp> {
           '/profile': (context) => ProfilePage(),
           '/onboarding': (context) => OnboardingPage(),
           '/landing': (context) => LandingPage(),
-          '/addedit': (context) => AddEditItemPage(),
           '/inventorysettings': (context) => InventorySettingsPage(),
+          '/addedit': (context) => AddEditItemPage(),
         },
       ),
     );
   }
+
+  String _determineInitialRoute() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (widget.isFirstLaunch) return '/onboarding';
+    return user != null ? '/' : '/landing';
+  }
 }
+
