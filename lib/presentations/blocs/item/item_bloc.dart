@@ -88,14 +88,14 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
 
         // Schedule a notification for expiring items
         if (event.itemData.expDate != null) {
-          final expDate = DateFormat('dd MMMM yyyy').parse(event.itemData.expDate!);
+          final expDate = (event.itemData.expDate as Timestamp).toDate(); // Convert Firestore Timestamp to DateTime
           final reminderDate = expDate.subtract(const Duration(days: 3)); // 3 days before expiry
 
           if (reminderDate.isAfter(DateTime.now())) {
             await NotificationService().scheduleNotification(
               id: itemId.hashCode, // Unique ID based on the Firestore document ID
               title: 'Reminder: ${event.itemData.name} is expiring soon!',
-              body: 'Your item "${event.itemData.name}" will expire on ${event.itemData.expDate}.',
+              body: 'Your item "${event.itemData.name}" will expire on ${DateFormat('dd MMMM yyyy').format(expDate)}.',
               scheduledDate: reminderDate,
             );
           }
@@ -129,16 +129,16 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
         final notificationId = event.id.hashCode;
         await NotificationService().cancelNotification(notificationId);
 
-        // Schedule a new notification if a valid expiration date exists
-        if (data.expDate != '') {
-          final expDate = DateFormat('dd MMMM yyyy').parse(data.expDate!);
+        // Schedule a notification for expiring items
+        if (event.itemData.expDate != null) {
+          final expDate = (event.itemData.expDate as Timestamp).toDate(); // Convert Firestore Timestamp to DateTime
           final reminderDate = expDate.subtract(const Duration(days: 3)); // 3 days before expiry
 
           if (reminderDate.isAfter(DateTime.now())) {
             await NotificationService().scheduleNotification(
-              id: notificationId, // Use a unique ID based on the item ID
-              title: 'Reminder: ${data.name} is expiring soon!',
-              body: 'Your item "${data.name}" will expire on ${data.expDate}.',
+              id: event.itemData.id.hashCode, // Unique ID based on the Firestore document ID
+              title: 'Reminder: ${event.itemData.name} is expiring soon!',
+              body: 'Your item "${event.itemData.name}" will expire on ${DateFormat('dd MMMM yyyy').format(expDate)}.',
               scheduledDate: reminderDate,
             );
           }

@@ -13,7 +13,7 @@ part 'inventory_event.dart';
 part 'inventory_state.dart';
 
 class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
-  final _firebaseFirestore = FirebaseFirestore.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   InventoryBloc() : super(InventoryInitial()) {
     on<LoadInventory>((event, emit) async {
@@ -25,15 +25,15 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
           return;
         }
 
-        final categoriesSnapshot = await _firebaseFirestore
+        final categoriesSnapshot = await _firestore
             .collection('categories')
             .where('userId', isEqualTo: user.uid)
             .get();
-        final locationsSnapshot = await _firebaseFirestore
+        final locationsSnapshot = await _firestore
             .collection('locations')
             .where('userId', isEqualTo: user.uid)
             .get();
-        final sublocationsSnapshot = await _firebaseFirestore
+        final sublocationsSnapshot = await _firestore
             .collection('sublocations')
             .where('userId', isEqualTo: user.uid)
             .get();
@@ -48,7 +48,7 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
             .map((doc) => Sublocation.fromFirestore(doc))
             .toList();
 
-        final snapshot = await _firebaseFirestore
+        final snapshot = await _firestore
             .collection('items')
             .where('userId', isEqualTo: user.uid)
             .get();
@@ -72,7 +72,7 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
       emit(InventoryLoading());
       try {
         // Delete the item from Firestore
-        await _firebaseFirestore.collection('items').doc(event.itemId).delete();
+        await _firestore.collection('items').doc(event.itemId).delete();
 
         // Cancel the notification for the deleted item
         final notificationId = event.itemId.hashCode;

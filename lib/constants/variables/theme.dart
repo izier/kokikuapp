@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFFF83B46); // Logo color
-  static const Color secondaryColor = Color(0xFFFA737B); // Complementary color
-  static const Color backgroundColorLight = Colors.white; // Light background
-  static const Color backgroundColorDark = Color(0xFF1C1C1E); // Dark background
-  static const Color lightGrey = Color(0xFFE0E0E0); // Light background
+  static const Color secondaryColor = Color(0xFFFA6A73); // Slightly muted complementary color
+  static const Color backgroundColorLight = Colors.white; // Light background (off-white)
+  static const Color backgroundColorDark = Color(0xFF121212); // Dark background (very dark gray)
+  static const Color lightGrey = Color(0xFFE0E0E0); // Soft grey background
 
   static const TextStyle _baseTextStyle = TextStyle(
     fontFamily: 'Nunito',
     fontSize: 16,
-    fontWeight: FontWeight.w400, // Reduced weight for sleeker text
+    fontWeight: FontWeight.w400,
   );
 
   static const TextStyle _headingTextStyle = TextStyle(
     fontFamily: 'Poppins',
     fontSize: 16,
-    fontWeight: FontWeight.w500, // Softer boldness for headings
+    fontWeight: FontWeight.w500,
   );
 
   // Light Theme
@@ -32,8 +32,8 @@ class AppTheme {
       titleTextStyle: _headingTextStyle.copyWith(
         fontWeight: FontWeight.w700,
         fontSize: 18,
-        color: Colors.black
-      )
+        color: Colors.black,
+      ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
@@ -105,9 +105,9 @@ class AppTheme {
     dropdownMenuTheme: DropdownMenuThemeData(
       textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
     ),
-    // cardTheme: CardThemeData(
-    //   color: lightGrey
-    // )
+    bottomSheetTheme: BottomSheetThemeData(
+      shadowColor: Colors.black,
+    ),
   );
 
   // Dark Theme
@@ -123,8 +123,8 @@ class AppTheme {
       titleTextStyle: _headingTextStyle.copyWith(
         fontWeight: FontWeight.w700,
         fontSize: 18,
-        color: Colors.white
-      )
+        color: Colors.white,
+      ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
@@ -196,8 +196,8 @@ class AppTheme {
     dropdownMenuTheme: DropdownMenuThemeData(
       textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
     ),
-    // cardTheme: CardThemeData(
-    //   color: Colors.black
-    // )
+    cardTheme: CardThemeData(
+      color: backgroundColorDark,
+    ),
   );
 }

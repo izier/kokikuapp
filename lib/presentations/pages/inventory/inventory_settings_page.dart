@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
@@ -26,18 +27,20 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!; // Get the localization instance
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventory Settings'),
+        title: Text(localization.translate('inventory_settings')),
         centerTitle: true,
         elevation: 0,
         bottom: TabBar(
           dividerColor: Colors.transparent,
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Categories'),
-            Tab(text: 'Locations'),
-            Tab(text: 'Sublocations'),
+          tabs: [
+            Tab(text: localization.translate('categories')),
+            Tab(text: localization.translate('locations')),
+            Tab(text: localization.translate('sublocations')),
           ],
         ),
       ),
@@ -65,35 +68,35 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                   // Category Section
                   _buildSection(
                     context,
-                    title: 'Categories',
+                    title: localization.translate('categories'),
                     items: state.categories,
-                    onEdit: (item) => _showEditModal(context, item, 'Edit Category', isCategory: true),
+                    onEdit: (item) => _showEditModal(context, item, localization.translate('edit_category'), isCategory: true),
                     onDelete: (item) => _deleteCategory(context, item),
-                    onAdd: () => _showAddModal(context: context, title: 'Add New Category', isCategory: true),
+                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_category'), isCategory: true),
                   ),
                   // Location Section
                   _buildSection(
                     context,
-                    title: 'Locations',
+                    title: localization.translate('locations'),
                     items: state.locations,
-                    onEdit: (item) => _showEditModal(context, item, 'Edit Location', isCategory: false),
+                    onEdit: (item) => _showEditModal(context, item, localization.translate('edit_location'), isCategory: false),
                     onDelete: (item) => _deleteLocation(context, item),
-                    onAdd: () => _showAddModal(context: context, title: 'Add New Location', isCategory: false),
+                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_location'), isCategory: false),
                   ),
                   // Sublocation Section
                   _buildSection(
                     context,
-                    title: 'Sublocations',
+                    title: localization.translate('sublocations'),
                     items: state.sublocations,
-                    onEdit: (item) => _showEditModal(context, item, 'Edit Sublocation', isCategory: false),
+                    onEdit: (item) => _showEditModal(context, item, localization.translate('edit_sublocation'), isCategory: false),
                     onDelete: (item) => _deleteSublocation(context, item),
-                    onAdd: () => _showAddModal(context: context, title: 'Add New Sublocation', locations: state.locations, isCategory: false),
+                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_sublocation'), locations: state.locations, isCategory: false),
                   ),
                 ],
               );
             }
 
-            return const Center(child: Text('Error loading inventory settings.'));
+            return Container();
           },
         ),
       ),
@@ -108,7 +111,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
         required Function(T) onDelete,
         required VoidCallback onAdd,
       }) {
-
+    final localization = LocalizationService.of(context)!; // Get the localization instance
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Stack(
@@ -126,20 +129,23 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                     : (item is Location)
                     ? item.name
                     : (item as Sublocation?)?.name ?? 'Unnamed';
-                return ListTile(
-                  title: Text(itemName),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => onEdit(item),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _showDeleteConfirmationDialog(context, item, onDelete),
-                      ),
-                    ],
+                return Card(
+                  elevation: 0,
+                  child: ListTile(
+                    title: Text(itemName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => onEdit(item),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _showDeleteConfirmationDialog(context, item, onDelete),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -150,34 +156,48 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 onPressed: onAdd,
-                child: Text('Add New $title'),
+                child: Text('${localization.translate('add_new')} $title'),
               ),
             ),
-          )
+          ),
         ],
-      )
+      ),
     );
   }
 
   void _showDeleteConfirmationDialog<T>(BuildContext context, T item, Function(T) onDelete) {
+    final localization = LocalizationService.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this item?'),
+        title: Text(localization.translate('delete_item')),
+        content: Text(localization.translate('delete_item_confirmation')),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(localization.translate('cancel')),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: () {
               onDelete(item);
               Navigator.pop(context);
             },
-            child: const Text('Delete'),
+            child: Text(localization.translate('delete')),
           ),
         ],
       ),
@@ -188,24 +208,22 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
     required BuildContext context,
     required String title,
     List<Location>? locations,
-    required bool isCategory, // Determines if it's for a category, location, or sublocation
+    required bool isCategory,
   }) {
     final controller = TextEditingController();
     Location? selectedLocation;
+    final localization = LocalizationService.of(context)!; // Get the localization instance
 
     showBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       builder: (_) => Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1),
-        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             if (locations != null)
               LocationDropdown(
                 locations: locations,
@@ -215,27 +233,33 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                   selectedLocation = value;
                 },
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                labelText: 'Name',
+                labelText: LocalizationService.of(context)!.translate('name'),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
                     if (isCategory) {
                       context.read<ItemBloc>().add(AddCategory(controller.text));
                     } else if (selectedLocation != null) {
                       context.read<ItemBloc>().add(AddSublocation(
-                        selectedLocation!.id, 
+                        selectedLocation!.id,
                         controller.text,
                       ));
                     } else {
@@ -244,10 +268,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                     Navigator.pop(context);
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Add'),
+                child: Text(localization.translate('add')),
               ),
             ),
           ],
@@ -258,20 +279,18 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
 
   void _showEditModal(BuildContext context, dynamic item, String title, {required bool isCategory}) {
     final controller = TextEditingController(text: item.name);
+    final localization = LocalizationService.of(context)!; // Get the localization instance
 
     showBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       builder: (_) => Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1),
-        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: const InputDecoration(
@@ -305,7 +324,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Update'),
+              child: Text(localization.translate('update')),
             ),
           ],
         ),

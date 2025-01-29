@@ -5,44 +5,44 @@ class Item {
   final String name;
   final String? description;
   final String? categoryId;
-  final int? quantity;
-  final String? regDate;
-  final String? expDate;
+  final int quantity;
+  final Timestamp? regDate; // Registration Date (changed to Timestamp)
+  final Timestamp? expDate; // Expiry Date (changed to Timestamp)
   final String? locationId;
   final String? sublocationId;
-  final String? userId;
+  final String userId;
 
   Item({
     required this.id,
     required this.name,
     this.description,
     this.categoryId,
-    this.quantity,
+    required this.quantity,
     this.regDate,
     this.expDate,
     this.locationId,
     this.sublocationId,
-    this.userId,
+    required this.userId,
   });
 
-  // Factory constructor to create an Item from Firestore DocumentSnapshot
+  /// Create an Item from Firestore DocumentSnapshot
   factory Item.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Item(
       id: doc.id,
-      name: data['name'] ?? '',
+      name: data['name'] ?? 'Unknown',
       description: data['description'],
-      categoryId: data['categoryId'] ?? '',
-      quantity: data['quantity'] ?? 0,
-      regDate: data['regDate'],
-      expDate: data['expDate'],
+      categoryId: data['categoryId'],
+      quantity: (data['quantity'] ?? 0) as int,
+      regDate: data['regDate'] as Timestamp?,
+      expDate: data['expDate'] as Timestamp?,
       locationId: data['locationId'],
       sublocationId: data['sublocationId'],
-      userId: data['userId'],
+      userId: data['userId'] ?? '',
     );
   }
 
-  // Convert Item to Map<String, dynamic>
+  /// Convert Item to a Firestore-compatible Map
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -57,31 +57,31 @@ class Item {
     };
   }
 
-  // Convert Map<String, dynamic> to Item
+  /// Create an Item from a Map (useful for local data handling)
   factory Item.fromMap(Map<String, dynamic> map) {
     return Item(
       id: map['id'],
       name: map['name'],
       description: map['description'],
       categoryId: map['categoryId'],
-      quantity: map['quantity'],
-      regDate: map['regDate'],
-      expDate: map['expDate'],
+      quantity: map['quantity'] as int,
+      regDate: map['regDate'] as Timestamp?,
+      expDate: map['expDate'] as Timestamp?,
       locationId: map['locationId'],
       sublocationId: map['sublocationId'],
       userId: map['userId'],
     );
   }
 
-  // The copyWith function to create a new Item with updated fields
+  /// Creates a new Item with updated fields
   Item copyWith({
     String? id,
     String? name,
     String? description,
     String? categoryId,
     int? quantity,
-    String? regDate,
-    String? expDate,
+    Timestamp? regDate,
+    Timestamp? expDate,
     String? locationId,
     String? sublocationId,
     String? userId,

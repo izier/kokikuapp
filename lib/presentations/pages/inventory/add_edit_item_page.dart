@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -50,8 +52,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
       nameController.text = widget.item!.name;
       quantityController.text = widget.item!.quantity.toString();
       descriptionController.text = widget.item!.description ?? '';
-      regDateController.text = widget.item!.regDate ?? '';
-      expDateController.text = widget.item!.expDate ?? '';
+      regDateController.text = widget.item!.regDate.toString() ?? '';
+      expDateController.text = widget.item!.expDate.toString() ?? '';
       final selectedCategories = widget.categories!.where((category) => category.id == widget.item!.categoryId);
       final selectedLocations = widget.locations!.where((location) => location.id == widget.item!.locationId);
       final selectedSublocations = widget.sublocations!.where((sublocation) => sublocation.id == widget.item!.sublocationId);
@@ -70,6 +72,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.item == null ? 'Add Item' : 'Edit Item'),
         actions: [
@@ -107,7 +110,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             if (value?.id == 'add') {
                               _showAddCategoryModal(context);
                             } else {
-                              log('selectedCategory: ${value!.name}');
                               setState(() => selectedCategory = value);
                             }
                           },
@@ -150,11 +152,11 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         const SizedBox(height: 16),
 
                         // Registration Date
-                        _buildDatePicker('Registration Date', regDateController, 'Select a registration date'),
+                        _buildDatePicker(label: 'Registration Date', controller: regDateController, validationMessage: 'Select a registration date'),
                         const SizedBox(height: 16),
 
                         // Expiry Date
-                        _buildDatePicker('Expiry Date', expDateController, 'Select an expiry date'),
+                        _buildDatePicker(label: 'Expiry Date', controller: expDateController, validationMessage: 'Select an expiry date'),
                         const SizedBox(height: 16),
 
                         // Description
@@ -165,8 +167,15 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
                             onPressed: () {
                               if (formKey.currentState!.validate()) {
+                                final user = FirebaseAuth.instance.currentUser;
                                 _submitForm(Item(
                                   id: widget.item?.id ?? '',
                                   name: nameController.text,
@@ -175,17 +184,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                                   sublocationId: selectedSublocation != null ? selectedSublocation!.id : '',
                                   description: descriptionController.text,
                                   quantity: int.parse(quantityController.text),
-                                  regDate: regDateController.text,
-                                  expDate: expDateController.text,
+                                  regDate: parseDateToTimestamp(regDateController.text),
+                                  expDate: parseDateToTimestamp(expDateController.text),
+                                  userId: user!.uid,
                                 ));
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
                             child: Text(
                               widget.item == null ? 'Add Item' : 'Save Changes',
                             ),
@@ -196,7 +200,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                   ),
                 );
               }
-              return Center(child: Text('Error loading categories, locations, or sublocations'));
+              return Container();
             },
           ),
         ),
@@ -227,7 +231,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ],
@@ -277,41 +281,42 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     );
   }
 
-  Widget _buildDatePicker(String label, TextEditingController controller, String validationMessage) {
-    return GestureDetector(
-      onTap: () async {
-        final selectedDate = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-        if (selectedDate != null) {
-          setState(() {
-            controller.text = DateFormat('dd MMMM yyyy').format(selectedDate);
-          });
-        }
-      },
-      child: AbsorbPointer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: validationMessage,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                suffixIcon: Icon(Icons.calendar_today)
-              ),
+  Widget _buildDatePicker({
+    required String label,
+    required TextEditingController controller,
+    required String validationMessage,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          readOnly: true, // Prevent manual input
+          decoration: InputDecoration(
+            hintText: validationMessage,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: () async {
+                final selectedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (selectedDate != null) {
+                  controller.text = DateFormat('dd MMMM yyyy').format(selectedDate);
+                }
+              },
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -354,9 +359,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     showBottomSheet(
       context: context,
       builder: (_) => Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 1)
-        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -377,6 +379,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 onPressed: () {
                   context.read<ItemBloc>().add(AddCategory(controller.text.trim()));
                   Navigator.pop(context); // Close the bottom sheet after adding
@@ -396,9 +404,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     showBottomSheet(
       context: context,
       builder: (_) => Container(
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 1)
-        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -419,6 +424,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 onPressed: () {
                   context.read<ItemBloc>().add(AddLocation(controller.text.trim()));
                   Navigator.pop(context);
@@ -437,9 +448,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     showBottomSheet(
       context: context,
       builder: (_) => Container(
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 1)
-        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -460,6 +468,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 onPressed: () {
                   context.read<ItemBloc>().add(AddSublocation(locationId, controller.text.trim()));
                   Navigator.pop(context);
@@ -486,6 +500,12 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: () {
               context.read<ItemBloc>().add(DeleteItem(widget.item!.id));
               Navigator.pop(context);
@@ -496,5 +516,18 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
         ],
       ),
     );
+  }
+
+  // Convert the controller text to a Timestamp
+  Timestamp? parseDateToTimestamp(String dateText) {
+    if (dateText.isEmpty) return null; // Handle empty input
+
+    try {
+      DateTime parsedDate = DateFormat('dd MMMM yyyy').parse(dateText);
+      return Timestamp.fromDate(parsedDate);
+    } catch (e) {
+      log('Error parsing date: $e');
+      return null;
+    }
   }
 }

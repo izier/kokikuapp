@@ -136,7 +136,7 @@ class _LandingPageState extends State<LandingPage> {
                           color: Colors.white
                       )
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Text(
                       localizations.translate('landingSub'),
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -163,7 +163,7 @@ class _LandingPageState extends State<LandingPage> {
                       child: Text(localizations.translate('createAccount')),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -182,14 +182,14 @@ class _LandingPageState extends State<LandingPage> {
                       child: Text(localizations.translate('login')),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Center(
                       child: Text(
                         localizations.translate('orContinueWith'),
                         style: TextStyle(color: Colors.white),
                       )
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

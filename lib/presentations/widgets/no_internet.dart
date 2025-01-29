@@ -15,24 +15,29 @@ class NoInternetWidget extends StatelessWidget {
     final localizations = LocalizationService.of(context)!;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.max,
       children: [
         Icon(Icons.signal_wifi_off, size: 48, color: AppTheme.primaryColor),
-        SizedBox(height: 8),
-        Text(
-          localizations.translate('noInternet'),
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18),
+        SizedBox(height: 16),
+        Center(
+          child: Text(
+            localizations.translate('noInternet'),
+          ),
         ),
         SizedBox(height: 16),
         SizedBox(
           width: 200,
           child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: onRefresh,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.refresh),
+                const Icon(Icons.refresh, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(localizations.translate('refresh')),
               ],

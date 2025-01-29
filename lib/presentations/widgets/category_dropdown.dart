@@ -57,6 +57,13 @@ class CategoryDropdown extends StatelessWidget {
               ),
             ),
           ),
+          // Add style to selected item text here
+          dropdownBuilder: (context, selectedItem) {
+            return Text(
+              selectedItem?.name ?? '',
+              style: const TextStyle(fontSize: 16), // Make text bigger here
+            );
+          },
         ),
       ],
     );

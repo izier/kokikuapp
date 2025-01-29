@@ -98,10 +98,13 @@ class OnboardingPageState extends State<OnboardingPage> {
                 ),
                 // Next or Get Started Button
                 ElevatedButton(
-                  onPressed: _onNextPressed,
                   style: ElevatedButton.styleFrom(
-                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
+                  onPressed: _onNextPressed,
                   child: Text(
                     _currentPage == (onboardingList.length - 1)
                         ? localizations.translate('getStarted')
