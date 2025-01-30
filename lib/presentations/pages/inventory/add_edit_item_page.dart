@@ -1,26 +1,29 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
-import 'package:kokiku/datas/models/remote/item.dart';
+import 'package:kokiku/datas/models/remote/inventory_item.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
-import 'package:kokiku/presentations/blocs/item/item_bloc.dart';
+import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
+import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
 import 'package:kokiku/presentations/widgets/category_dropdown.dart';
 import 'package:kokiku/presentations/widgets/location_dropdown.dart';
 import 'package:kokiku/presentations/widgets/sublocation_dropdown.dart';
 
 class AddEditItemPage extends StatefulWidget {
-  final Item? item;
+  final InventoryItem? item;
+  final List<AccessId>? accessIds;
   final List<ItemCategory>? categories;
   final List<Location>? locations;
   final List<Sublocation>? sublocations;
   const AddEditItemPage({
     this.item,
+    this.accessIds,
     this.categories,
     this.locations,
     this.sublocations,
@@ -38,25 +41,29 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController regDateController = TextEditingController();
   final TextEditingController expDateController = TextEditingController();
+  AccessId? selectedAccessId;
   Location? selectedLocation;
   Sublocation? selectedSublocation;
   ItemCategory? selectedCategory;
-  bool isAddMode = false;
 
   @override
   void initState() {
     super.initState();
-    context.read<ItemBloc>().add(LoadItemPage());
+    context.read<InventoryBloc>().add(LoadInventory());
     quantityController.text = '0';
     if (widget.item != null) {
       nameController.text = widget.item!.name;
       quantityController.text = widget.item!.quantity.toString();
       descriptionController.text = widget.item!.description ?? '';
-      regDateController.text = widget.item!.regDate.toString() ?? '';
-      expDateController.text = widget.item!.expDate.toString() ?? '';
+      widget.item!.regDate != null ? setDateControllerText(regDateController, widget.item!.regDate) : regDateController.text = '';
+      widget.item!.expDate != null ? setDateControllerText(expDateController, widget.item!.regDate) : expDateController.text = '';
+      final selectedAccessIds = widget.accessIds!.where((accessId) => accessId.id == widget.item!.accessId);
       final selectedCategories = widget.categories!.where((category) => category.id == widget.item!.categoryId);
       final selectedLocations = widget.locations!.where((location) => location.id == widget.item!.locationId);
       final selectedSublocations = widget.sublocations!.where((sublocation) => sublocation.id == widget.item!.sublocationId);
+      if  (selectedAccessIds.isNotEmpty) {
+        selectedAccessId = selectedAccessIds.first;
+      }
       if (selectedCategories.isNotEmpty) {
         selectedCategory = selectedCategories.first;
       }
@@ -83,19 +90,19 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
         ],
       ),
       body: SafeArea(
-        child: BlocListener<ItemBloc, ItemState>(
+        child: BlocListener<InventoryBloc, InventoryState>(
           listener: (context, state) {
-            if (state is ItemError) {
+            if (state is InventoryError) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: BlocBuilder<ItemBloc, ItemState>(
+          child: BlocBuilder<InventoryBloc, InventoryState>(
             builder: (context, state) {
-              if (state is ItemLoading) {
+              if (state is InventoryLoading) {
                 return Center(child: CircularProgressIndicator());
               }
 
-              if (state is ItemLoaded) {
+              if (state is InventoryLoaded) {
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Form(
@@ -103,9 +110,23 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AccessIdDropdown(
+                          accessIds: state.accessIds,
+                          selectedAccessId: selectedAccessId,
+                          onChanged: (value) {
+                            if (value?.id == 'add') {
+                              _showAddCategoryModal(context);
+                            } else {
+                              setState(() => selectedAccessId = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
                         CategoryDropdown(
                           categories: state.categories,
                           selectedCategory: selectedCategory,
+                          selectedAccessId: selectedAccessId,
                           onChanged: (value) {
                             if (value?.id == 'add') {
                               _showAddCategoryModal(context);
@@ -121,6 +142,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         const SizedBox(height: 16),
 
                         LocationDropdown(
+                          selectedAccessId: selectedAccessId,
                           locations: state.locations,
                           selectedLocation: selectedLocation,
                           onChanged: (value) {
@@ -134,6 +156,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         const SizedBox(height: 16),
 
                         SublocationDropdown(
+                          selectedAccessId: selectedAccessId,
                           sublocations: state.sublocations,
                           selectedLocation: selectedLocation,
                           selectedSublocation: selectedSublocation,
@@ -167,28 +190,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
                             onPressed: () {
-                              if (formKey.currentState!.validate()) {
-                                final user = FirebaseAuth.instance.currentUser;
-                                _submitForm(Item(
-                                  id: widget.item?.id ?? '',
-                                  name: nameController.text,
-                                  categoryId: selectedCategory != null ? selectedCategory!.id : '',
-                                  locationId: selectedLocation != null ? selectedLocation!.id : '',
-                                  sublocationId: selectedSublocation != null ? selectedSublocation!.id : '',
-                                  description: descriptionController.text,
-                                  quantity: int.parse(quantityController.text),
-                                  regDate: parseDateToTimestamp(regDateController.text),
-                                  expDate: parseDateToTimestamp(expDateController.text),
-                                  userId: user!.uid,
-                                ));
-                              }
+                              _submitForm();
                             },
                             child: Text(
                               widget.item == null ? 'Add Item' : 'Save Changes',
@@ -294,6 +297,17 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
         TextFormField(
           controller: controller,
           readOnly: true, // Prevent manual input
+          onTap: () async {
+            final selectedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+            );
+            if (selectedDate != null) {
+              controller.text = DateFormat('dd MMMM yyyy').format(selectedDate);
+            }
+          },
           decoration: InputDecoration(
             hintText: validationMessage,
             border: OutlineInputBorder(
@@ -320,7 +334,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     );
   }
 
-  void _submitForm(Item item) {
+  void _submitForm() {
     if (formKey.currentState!.validate()) {
       // if (selectedCategory == null) {
       //   ScaffoldMessenger.of(context).showSnackBar(
@@ -343,9 +357,30 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
       // Submit the item
       if (widget.item == null) {
-        context.read<ItemBloc>().add(AddItem(item));
+        context.read<InventoryBloc>().add(AddInventoryItem(
+          name: nameController.text,
+          categoryId: selectedCategory != null ? selectedCategory!.id : '',
+          locationId: selectedLocation != null ? selectedLocation!.id : '',
+          sublocationId: selectedSublocation != null ? selectedSublocation!.id : '',
+          description: descriptionController.text,
+          quantity: int.parse(quantityController.text),
+          regDate: parseDateToTimestamp(regDateController.text),
+          expDate: parseDateToTimestamp(expDateController.text),
+          accessId: selectedAccessId!.id,
+        ));
       } else {
-        context.read<ItemBloc>().add(EditItem(item.id, item));
+        context.read<InventoryBloc>().add(EditInventoryItem(
+          id: widget.item?.id ?? '',
+          name: nameController.text,
+          categoryId: selectedCategory != null ? selectedCategory!.id : '',
+          locationId: selectedLocation != null ? selectedLocation!.id : '',
+          sublocationId: selectedSublocation != null ? selectedSublocation!.id : '',
+          description: descriptionController.text,
+          quantity: int.parse(quantityController.text),
+          regDate: parseDateToTimestamp(regDateController.text),
+          expDate: parseDateToTimestamp(expDateController.text),
+          accessId: selectedAccessId!.id,
+        ));
       }
 
       Navigator.pop(context);
@@ -354,136 +389,143 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   void _showAddCategoryModal(BuildContext context) {
     final controller = TextEditingController();
+    final focusNode = FocusNode();
 
-    // Show the modal bottom sheet
-    showBottomSheet(
+    // Show the bottom sheet
+    showDialog(
       context: context,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Create Category'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Enter category name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
+      builder: (_) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          focusNode.requestFocus();
+        });
+        return AlertDialog(
+          title: Text('Create Category'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                focusNode: focusNode,
+                controller: controller,
+                decoration: InputDecoration(
+                  label: Text('Category Name'),
+                  hintText: 'Enter category name',
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                 ),
-                onPressed: () {
-                  context.read<ItemBloc>().add(AddCategory(controller.text.trim()));
-                  Navigator.pop(context); // Close the bottom sheet after adding
-                },
-                child: const Text('Add'),
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<InventoryBloc>().add(AddCategory(
+                        controller.text.trim(), selectedAccessId!.id));
+                    Navigator.pop(
+                        context); // Close the bottom sheet after adding
+                  },
+                  child: const Text('Add'),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
-
   void _showAddLocationModal(BuildContext context) {
     final controller = TextEditingController();
+    final focusNode = FocusNode();
 
-    showBottomSheet(
+    showDialog(
       context: context,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Create Location'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Enter location name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
+      builder: (_) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          focusNode.requestFocus();
+        });
+        return AlertDialog(
+          title: Text('Create Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                focusNode: focusNode,
+                controller: controller,
+                decoration: InputDecoration(
+                  label: Text('Location Name'),
+                  hintText: 'Enter location name',
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                 ),
-                onPressed: () {
-                  context.read<ItemBloc>().add(AddLocation(controller.text.trim()));
-                  Navigator.pop(context);
-                },
-                child: const Text('Add'),
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<InventoryBloc>().add(
+                        AddLocation(controller.text.trim(), selectedAccessId!.id));
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Add'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   void _showAddSublocationModal(BuildContext context, String locationId) {
     final controller = TextEditingController();
-    showBottomSheet(
+    final focusNode = FocusNode();
+
+    showDialog(
       context: context,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Create Sublocation'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'Enter sublocation name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
+      builder: (_) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          focusNode.requestFocus();
+        });
+        return AlertDialog(
+          title: Text('Create Sublocation'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                focusNode: focusNode,
+                controller: controller,
+                decoration: InputDecoration(
+                  label: Text('Sublocation Name'),
+                  hintText: 'Enter sublocation name',
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                 ),
-                onPressed: () {
-                  context.read<ItemBloc>().add(AddSublocation(locationId, controller.text.trim()));
-                  Navigator.pop(context);
-                },
-                child: const Text('Add'),
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<InventoryBloc>().add(
+                        AddSublocation(locationId, controller.text.trim(), selectedAccessId!.id));
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Add'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -500,14 +542,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
             onPressed: () {
-              context.read<ItemBloc>().add(DeleteItem(widget.item!.id));
+              context.read<InventoryBloc>().add(DeleteInventoryItem(widget.item!.id!));
               Navigator.pop(context);
               Navigator.pop(context);
             },
@@ -528,6 +564,16 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     } catch (e) {
       log('Error parsing date: $e');
       return null;
+    }
+  }
+
+  void setDateControllerText(TextEditingController controller, dynamic timestamp) {
+    if (timestamp is Timestamp) {
+      controller.text = DateFormat('dd MMMM yyyy').format(timestamp.toDate());
+    } else if (timestamp is DateTime) {
+      controller.text = DateFormat('dd MMMM yyyy').format(timestamp);
+    } else {
+      controller.text = ''; // Handle empty or invalid values
     }
   }
 }

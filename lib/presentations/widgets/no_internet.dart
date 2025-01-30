@@ -27,12 +27,6 @@ class NoInternetWidget extends StatelessWidget {
         SizedBox(
           width: 200,
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
             onPressed: onRefresh,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

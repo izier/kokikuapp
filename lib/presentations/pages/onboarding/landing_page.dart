@@ -2,12 +2,14 @@
 
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/constants/variables/asset.dart';
 import 'package:kokiku/constants/variables/theme.dart';
+import 'package:kokiku/datas/models/remote/user.dart';
 import 'package:kokiku/presentations/widgets/custom_toast.dart';
 
 class LandingPage extends StatefulWidget {
@@ -61,12 +63,10 @@ class _LandingPageState extends State<LandingPage> {
         isLoading = false;
       });
 
-      showToast(
+      showSuccessToast(
         context: context,
-        icon: Icon(Icons.check),
         title: localizations.translate('loggedIn'),
         message: localizations.translate('loggedInSub'),
-        color: Colors.green
       );
 
       return userCredential.user;
@@ -77,12 +77,10 @@ class _LandingPageState extends State<LandingPage> {
 
       log("Error: $e");
 
-      showToast(
+      showErrorToast(
         context: context,
-        icon: Icon(Icons.cancel),
         title: localizations.translate('loggedInFail'),
         message: e.toString(),
-        color: Colors.red,
       );
 
       return null;
@@ -123,7 +121,8 @@ class _LandingPageState extends State<LandingPage> {
                       Text(
                           localizations.translate('appTitle'),
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: Colors.white
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold
                           )
                       ),
                     ],
@@ -133,7 +132,8 @@ class _LandingPageState extends State<LandingPage> {
                   Text(
                       localizations.translate('landing'),
                       style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: Colors.white
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold
                       )
                   ),
                   const SizedBox(height: 16),
@@ -143,7 +143,7 @@ class _LandingPageState extends State<LandingPage> {
                           color: Colors.white
                       )
                   ),
-                  const SizedBox(height: 50),
+                  const Spacer(),
                   // Buttons
                   SizedBox(
                     width: double.infinity,
@@ -155,15 +155,10 @@ class _LandingPageState extends State<LandingPage> {
                         elevation: 0,
                         backgroundColor: Colors.redAccent,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
                       ),
                       child: Text(localizations.translate('createAccount')),
                     ),
                   ),
-                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -174,30 +169,43 @@ class _LandingPageState extends State<LandingPage> {
                         elevation: 0,
                         backgroundColor: AppTheme.secondaryColor,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
                       ),
                       child: Text(localizations.translate('login')),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Center(
                       child: Text(
                         localizations.translate('orContinueWith'),
                         style: TextStyle(color: Colors.white),
                       )
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
                         User? user = await _signInWithGoogle();
                         if (user != null) {
-                          Navigator.pushNamedAndRemoveUntil(context, '/',
-                                  (Route<dynamic> route) => false);
+                          // Check if the user exists in the 'users' collection
+                          var userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+                          if (!userDoc.exists) {
+                            // Create the user's document if it doesn't exist
+                            UserModel newUser = UserModel(
+                              id: user.uid,
+                              email: user.email ?? '',
+                              name: user.displayName ?? '',
+                              accessIds: [], // You can add logic to assign access IDs if needed
+                              photoUrl: user.photoURL,
+                              createdAt: DateTime.now(),
+                            );
+
+                            // Store user data in Firestore
+                            await FirebaseFirestore.instance.collection('users').doc(user.uid).set(newUser.toFirestore());
+                          }
+
+                          Navigator.pushNamedAndRemoveUntil(context, '/', (Route<dynamic> route) => false);
                         } else {
                           // Handle failed login or user cancellation
                           log("Login failed or cancelled");
@@ -207,10 +215,6 @@ class _LandingPageState extends State<LandingPage> {
                           elevation: 0,
                           backgroundColor: Colors.transparent,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
                           side: const BorderSide(color: Colors.white)
                       ),
                       child: Row(

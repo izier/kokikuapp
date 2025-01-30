@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
+import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
-import 'package:kokiku/presentations/blocs/item/item_bloc.dart';
+import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
+import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
 import 'package:kokiku/presentations/widgets/location_dropdown.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class InventorySettingsPage extends StatefulWidget {
   const InventorySettingsPage({super.key});
@@ -21,8 +24,8 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
   @override
   void initState() {
     super.initState();
-    context.read<ItemBloc>().add(LoadItemPage());
-    _tabController = TabController(length: 3, vsync: this);
+    context.read<InventoryBloc>().add(LoadInventory());
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -38,15 +41,16 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
           dividerColor: Colors.transparent,
           controller: _tabController,
           tabs: [
+            Tab(text: localization.translate('access_id')),
             Tab(text: localization.translate('categories')),
             Tab(text: localization.translate('locations')),
             Tab(text: localization.translate('sublocations')),
           ],
         ),
       ),
-      body: BlocListener<ItemBloc, ItemState>(
+      body: BlocListener<InventoryBloc, InventoryState>(
         listener: (context, state) {
-          if (state is ItemError) {
+          if (state is InventoryError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -55,16 +59,20 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             );
           }
         },
-        child: BlocBuilder<ItemBloc, ItemState>(
+        child: BlocBuilder<InventoryBloc, InventoryState>(
           builder: (context, state) {
-            if (state is ItemLoading) {
+            if (state is InventoryLoading) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (state is ItemLoaded) {
+            if (state is InventoryLoaded) {
               return TabBarView(
                 controller: _tabController,
                 children: [
+                  _buildAccessIdList(
+                    accessIds: state.accessIds,
+                    onAdd: () => _showAddModal(accessIds: state.accessIds, context: context, title: localization.translate('add_new_access_id'), isCategory: false, isAccessId: true),
+                  ),
                   // Category Section
                   _buildSection(
                     context,
@@ -72,7 +80,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                     items: state.categories,
                     onEdit: (item) => _showEditModal(context, item, localization.translate('edit_category'), isCategory: true),
                     onDelete: (item) => _deleteCategory(context, item),
-                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_category'), isCategory: true),
+                    onAdd: () => _showAddModal(accessIds: state.accessIds, context: context, title: localization.translate('add_new_category'), isCategory: true, isAccessId: false),
                   ),
                   // Location Section
                   _buildSection(
@@ -81,7 +89,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                     items: state.locations,
                     onEdit: (item) => _showEditModal(context, item, localization.translate('edit_location'), isCategory: false),
                     onDelete: (item) => _deleteLocation(context, item),
-                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_location'), isCategory: false),
+                    onAdd: () => _showAddModal(accessIds: state.accessIds, context: context, title: localization.translate('add_new_location'), isCategory: false, isAccessId: false),
                   ),
                   // Sublocation Section
                   _buildSection(
@@ -90,7 +98,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                     items: state.sublocations,
                     onEdit: (item) => _showEditModal(context, item, localization.translate('edit_sublocation'), isCategory: false),
                     onDelete: (item) => _deleteSublocation(context, item),
-                    onAdd: () => _showAddModal(context: context, title: localization.translate('add_new_sublocation'), locations: state.locations, isCategory: false),
+                    onAdd: () => _showAddModal(accessIds: state.accessIds, context: context, title: localization.translate('add_new_sublocation'), locations: state.locations, isCategory: false, isAccessId: false),
                   ),
                 ],
               );
@@ -99,6 +107,77 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             return Container();
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildAccessIdList({
+    required List<AccessId> accessIds,
+    required VoidCallback onAdd
+  }) {
+    final localization = LocalizationService.of(context)!; // Get the localization instance
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Stack(
+        children: [
+          ListView.builder(
+            itemCount: accessIds.length,
+            itemBuilder: (context, index) {
+              final accessId = accessIds[index];
+              return Card(
+                elevation: 0,
+                child: ListTile(
+                  title: Text(accessId.name),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.qr_code),
+                        onPressed: () => _showQrDialog(accessId.id),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          // Align(
+          //   alignment: Alignment.bottomCenter,
+          //   child: SizedBox(
+          //     width: double.infinity,
+          //     child: ElevatedButton(
+          //       onPressed: onAdd,
+          //       child: Text('${localization.translate('add_new')} Access Id'),
+          //     ),
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
+
+  void _showQrDialog(String accessId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("QR Code"),
+        content: SizedBox(
+          width: 240, // Set a fixed width
+          height: 240, // Set a fixed height
+          child: Center(
+            child: QrImageView(
+              data: accessId,
+              version: QrVersions.auto,
+              size: 500.0,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
       ),
     );
   }
@@ -120,7 +199,6 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             padding: const EdgeInsets.only(bottom: 50),
             child: ListView.builder(
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
@@ -156,12 +234,6 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
                 onPressed: onAdd,
                 child: Text('${localization.translate('add_new')} $title'),
               ),
@@ -187,12 +259,6 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             child: Text(localization.translate('cancel')),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
             onPressed: () {
               onDelete(item);
               Navigator.pop(context);
@@ -208,24 +274,33 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
     required BuildContext context,
     required String title,
     List<Location>? locations,
+    required List<AccessId> accessIds,
     required bool isCategory,
+    required bool isAccessId,
   }) {
     final controller = TextEditingController();
     Location? selectedLocation;
+    AccessId? selectedAccessId;
     final localization = LocalizationService.of(context)!; // Get the localization instance
 
-    showBottomSheet(
+    showDialog(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
+            if (!isAccessId) AccessIdDropdown(
+              accessIds: accessIds,
+              selectedAccessId: selectedAccessId,
+              onChanged: (value) {
+                selectedAccessId = value;
+              },
+            ),
+            if (!isAccessId) const SizedBox(height: 16),
             if (locations != null)
               LocationDropdown(
+                selectedAccessId: selectedAccessId,
                 locations: locations,
                 selectedLocation: selectedLocation,
                 disableToAdd: false,
@@ -233,7 +308,6 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                   selectedLocation = value;
                 },
               ),
-            const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: InputDecoration(
@@ -247,26 +321,25 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
-                    if (isCategory) {
-                      context.read<ItemBloc>().add(AddCategory(controller.text));
-                    } else if (selectedLocation != null) {
-                      context.read<ItemBloc>().add(AddSublocation(
-                        selectedLocation!.id,
-                        controller.text,
-                      ));
+                    if (isAccessId) {
+                      context.read<InventoryBloc>().add(AddAccessId(controller.text));
                     } else {
-                      context.read<ItemBloc>().add(AddLocation(controller.text));
+                      if (isCategory) {
+                        context.read<InventoryBloc>().add(AddCategory(controller.text, selectedAccessId!.id));
+                      } else if (selectedLocation != null) {
+                        context.read<InventoryBloc>().add(AddSublocation(
+                            selectedLocation!.id,
+                            controller.text,
+                            selectedAccessId!.id
+                        ));
+                      } else {
+                        context.read<InventoryBloc>().add(AddLocation(controller.text, selectedAccessId!.id));
+                      }
                     }
-                    Navigator.pop(context);
                   }
+                  Navigator.pop(context);
                 },
                 child: Text(localization.translate('add')),
               ),
@@ -279,18 +352,15 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
 
   void _showEditModal(BuildContext context, dynamic item, String title, {required bool isCategory}) {
     final controller = TextEditingController(text: item.name);
-    final localization = LocalizationService.of(context)!; // Get the localization instance
+    final localization = LocalizationService.of(context)!;
 
-    showBottomSheet(
+    showDialog(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: const InputDecoration(
@@ -299,32 +369,35 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  if (isCategory) {
-                    context.read<ItemBloc>().add(EditCategory(
-                      item.id,
-                      controller.text,
-                    ));
-                  } else if (item is Location) {
-                    context.read<ItemBloc>().add(EditLocation(
-                      item.id,
-                      controller.text,
-                    ));
-                  } else if (item is Sublocation) {
-                    context.read<ItemBloc>().add(EditSublocation(
-                      item.id,
-                      controller.text,
-                    ));
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (controller.text.isNotEmpty) {
+                    if (isCategory) {
+                      context.read<InventoryBloc>().add(EditCategory(
+                        item.id,
+                        controller.text,
+                        item.accessId,
+                      ));
+                    } else if (item is Location) {
+                      context.read<InventoryBloc>().add(EditLocation(
+                        item.id,
+                        controller.text,
+                        item.accessId,
+                      ));
+                    } else if (item is Sublocation) {
+                      context.read<InventoryBloc>().add(EditSublocation(
+                        item.id,
+                        controller.text,
+                        item.accessId,
+                      ));
+                    }
+                    Navigator.pop(context);
                   }
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                },
+                child: Text(localization.translate('update')),
               ),
-              child: Text(localization.translate('update')),
             ),
           ],
         ),
@@ -333,14 +406,14 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
   }
 
   void _deleteCategory(BuildContext context, ItemCategory category) {
-    context.read<ItemBloc>().add(DeleteCategory(category.id));
+    context.read<InventoryBloc>().add(DeleteCategory(category.id));
   }
 
   void _deleteLocation(BuildContext context, Location location) {
-    context.read<ItemBloc>().add(DeleteLocation(location.id));
+    context.read<InventoryBloc>().add(DeleteLocation(location.id));
   }
 
   void _deleteSublocation(BuildContext context, Sublocation sublocation) {
-    context.read<ItemBloc>().add(DeleteSublocation(sublocation.id));
+    context.read<InventoryBloc>().add(DeleteSublocation(sublocation.id));
   }
 }

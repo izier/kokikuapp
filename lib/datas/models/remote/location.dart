@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Location {
   final String id;
   final String name;
-  final String userId;
+  final String accessId;
 
   Location({
     required this.id,
     required this.name,
-    required this.userId,
+    required this.accessId,
   });
 
   // Factory constructor to create SavingPlace from Firestore DocumentSnapshot
@@ -17,7 +17,7 @@ class Location {
     return Location(
       id: doc.id,
       name: data['name'] ?? '',
-      userId: data['userId'] ?? '',
+      accessId: data['accessId'] ?? '',
     );
   }
 
@@ -25,7 +25,7 @@ class Location {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'userId': userId,
+      'accessId': accessId,
     };
   }
 
@@ -33,12 +33,12 @@ class Location {
   Location copyWith({
     String? id,
     String? name,
-    String? userId,
+    String? accessId,
   }) {
     return Location(
       id: id ?? this.id,
       name: name ?? this.name,
-      userId: userId ?? this.userId
+      accessId: accessId ?? this.accessId
     );
   }
 }

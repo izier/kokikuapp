@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 
 class CategoryDropdown extends StatelessWidget {
   final List<ItemCategory> categories;
   final ItemCategory? selectedCategory;
   final Function(ItemCategory?) onChanged;
+  final AccessId? selectedAccessId;
 
   const CategoryDropdown({
     super.key,
     required this.categories,
     required this.selectedCategory,
     required this.onChanged,
+    required this.selectedAccessId
   });
 
   @override
   Widget build(BuildContext context) {
+    if (selectedAccessId == null) {
+      return const SizedBox();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,8 +37,8 @@ class CategoryDropdown extends StatelessWidget {
           selectedItem: selectedCategory,
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
           items: (filter, infiniteScrollProps) => [
-            ItemCategory(id: 'add', name: 'Add Category', userId: 'add'),
-            ...categories.map((e) => e)
+            ItemCategory(id: 'add', name: 'Add Category', accessId: 'add'),
+            ...categories.where((category) => category.accessId == selectedAccessId!.id).map((e) => e)
           ],
           itemAsString: (item) => item.name,
           onChanged: onChanged,

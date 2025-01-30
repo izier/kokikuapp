@@ -26,7 +26,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
 
         final categoriesSnapshot = await _firestore
             .collection('categories')
-            .where('userId', isEqualTo: user.uid)
+            .where('accessId', isEqualTo: user.uid)
             .get();
         final categories = categoriesSnapshot.docs
             .map((doc) => ItemCategory.fromFirestore(doc))
@@ -34,7 +34,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
 
         final snapshot = await _firestore
             .collection('shopping_lists')
-            .where('userId', isEqualTo: _user!.uid)
+            .where('accessId', isEqualTo: _user!.uid)
             .get();
 
         final shoppingLists = snapshot.docs
@@ -74,7 +74,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
 
         final shoppingList = ShoppingList(
           id: shoppingListRef.id,
-          userId: _user!.uid,
+          accessId: _user!.uid,
           description: event.description,
           name: event.name,
           createdAt: Timestamp.now(),
@@ -90,6 +90,32 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
       }
     });
 
+    // Create a new shopping list item
+    on<CreateShoppingListItem>((event, emit) async {
+      try {
+        emit(ShoppingListLoading());
+
+        final shoppingListItem = event.shoppingListItem;
+
+        final shoppingListItemRef = _firestore.collection('shopping_list_items').doc();
+        final newShoppingListItem = ShoppingListItem(
+          id: shoppingListItemRef.id,
+          name: shoppingListItem.name,
+          description: shoppingListItem.description,
+          categoryId: shoppingListItem.categoryId,
+          quantity: shoppingListItem.quantity,
+          isBought: false,
+          createdAt: Timestamp.now(), shoppingListId: '', accessId: '',
+        );
+
+        await shoppingListItemRef.set(newShoppingListItem.toMap());
+
+        emit(ShoppingLIstItemCreated(newShoppingListItem));
+      } catch (e) {
+        emit(ShoppingListError('Failed to create shopping list item: $e'));
+      }
+    });
+
     // Add items to a specific shopping list
     on<AddItemToShoppingList>((event, emit) async {
       try {
@@ -102,7 +128,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
           quantity: event.shoppingListItem.quantity,
           isBought: false,
           createdAt: Timestamp.now(),
-          shoppingListId: event.shoppingListId,
+          shoppingListId: event.shoppingListId, accessId: '',
         );
 
         // Save shopping list item to Firestore
@@ -205,7 +231,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         // Emit the updated shopping list state (you can choose to fetch updated data here)
         final updatedShoppingList = ShoppingList(
           id: event.id,
-          userId: _user!.uid,
+          accessId: _user!.uid,
           name: event.name,
           createdAt: Timestamp.now(),
           items: [], // Or fetch items if necessary

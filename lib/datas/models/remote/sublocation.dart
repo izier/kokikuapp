@@ -4,13 +4,13 @@ class Sublocation {
   final String id;
   final String locationId;
   final String name;
-  final String userId;
+  final String accessId;
 
   Sublocation({
     required this.id,
     required this.locationId,
     required this.name,
-    required this.userId,
+    required this.accessId,
   });
 
   // Factory constructor to create SavingPlace from Firestore DocumentSnapshot
@@ -20,7 +20,7 @@ class Sublocation {
       id: doc.id,
       locationId: data['locationId'] ?? '',
       name: data['name'] ?? '',
-      userId: data['userId'] ?? '',
+      accessId: data['accessId'] ?? '',
     );
   }
 
@@ -29,7 +29,7 @@ class Sublocation {
     return {
       'name': name,
       'locationId': locationId,
-      'userId': userId,
+      'accessId': accessId,
     };
   }
 
@@ -38,13 +38,13 @@ class Sublocation {
     String? id,
     String? locationId,
     String? name,
-    String? userId,
+    String? accessId,
   }) {
     return Sublocation(
       id: id ?? this.id,
       locationId: locationId ?? this.locationId,
       name: name ?? this.name,
-      userId: userId ?? this.userId,
+      accessId: accessId ?? this.accessId,
     );
   }
 }

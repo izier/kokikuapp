@@ -22,6 +22,13 @@ class AddShoppingList extends ShoppingListEvent {
   });
 }
 
+class CreateShoppingListItem extends ShoppingListEvent {
+  final ShoppingListItem shoppingListItem;
+
+  CreateShoppingListItem(this.shoppingListItem);
+}
+
+
 class AddItemToShoppingList extends ShoppingListEvent {
   final String shoppingListId; // The ID of the shopping list to which items are added
   final ShoppingListItem shoppingListItem; // The item to be added to the shopping list

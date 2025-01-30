@@ -27,3 +27,51 @@ void showToast({
     ),
   ).show(context);
 }
+
+void showSuccessToast({
+  required BuildContext context,
+  required String title,
+  required String message,
+}) {
+  DelightToastBar(
+    autoDismiss: true,
+    builder: (context) => ToastCard(
+      leading: Icon(Icons.check, color: Colors.white),
+      title: Text(
+          title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: Colors.white
+      )
+      ),
+      subtitle: Text(
+          message, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Colors.white
+      )
+      ),
+      color: Colors.green,
+    ),
+  ).show(context);
+}
+
+void showErrorToast({
+  required BuildContext context,
+  required String title,
+  required String message,
+}) {
+  DelightToastBar(
+    autoDismiss: true,
+    builder: (context) => ToastCard(
+      leading: Icon(Icons.cancel, color: Colors.white),
+      title: Text(
+          title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: Colors.white
+      )
+      ),
+      subtitle: Text(
+          message, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Colors.white
+      )
+      ),
+      color: Colors.red,
+    ),
+  ).show(context);
+}

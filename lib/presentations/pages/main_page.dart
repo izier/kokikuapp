@@ -38,16 +38,10 @@ class _MainPageState extends State<MainPage> {
         shape: const CircleBorder(),
         child: const Icon(Icons.add),
         onPressed: () {
-          log('sampe1');
           if (_selectedIndex == 2) {
-            log('sampe2');
-            log('add item to shopping list');
-
             // Show a dialog to add a new shopping list
             _showAddShoppingListDialog(context);
           } else {
-            log('sampe3');
-            log('add item to inventory');
             Navigator.pushNamed(context, '/addedit').whenComplete((){
               context.read<InventoryBloc>().add(LoadInventory());
             });
@@ -122,18 +116,18 @@ class _MainPageState extends State<MainPage> {
 
                   // Navigate to the new shopping list detail page
                   Future.delayed(Duration(milliseconds: 100), () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShoppingListDetailPage(
-                          shoppingListId: "new_id", // Update this with the actual ID
-                          shoppingListName: nameController.text,
-                          shoppingListDescription: descriptionController.text,
-                        ),
-                      ),
-                    ).whenComplete(() {
-                      shoppingListBloc.add(LoadShoppingList());
-                    });
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => ShoppingListDetailPage(
+                    //       shoppingListId: "new_id", // Update this with the actual ID
+                    //       shoppingListName: nameController.text,
+                    //       shoppingListDescription: descriptionController.text,
+                    //     ),
+                    //   ),
+                    // ).whenComplete(() {
+                    //   shoppingListBloc.add(LoadShoppingList());
+                    // });
                   });
                 }
               },

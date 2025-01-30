@@ -10,7 +10,6 @@ import 'package:kokiku/constants/variables/theme.dart';
 import 'package:kokiku/firebase_options.dart';
 import 'package:kokiku/locator.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
-import 'package:kokiku/presentations/blocs/item/item_bloc.dart';
 import 'package:kokiku/presentations/blocs/profile/profile_bloc.dart';
 import 'package:kokiku/presentations/blocs/shopping_list/shopping_list_bloc.dart';
 import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
@@ -78,7 +77,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         BlocProvider(create: (_) => ProfileBloc()),
         BlocProvider(create: (_) => InventoryBloc()),
-        BlocProvider(create: (_) => ItemBloc()),
+        // BlocProvider(create: (_) => ItemBloc()),
         BlocProvider(create: (_) => ShoppingListBloc()),
       ],
       child: MaterialApp(
@@ -102,13 +101,13 @@ class _MyAppState extends State<MyApp> {
         routes: {
           '/': (context) => MainPage(),
           '/inventory': (context) => InventoryPage(),
-          '/shopping': (context) => ShoppingListPage(),
+          // '/shopping': (context) => ShoppingListPage(),
           '/profile': (context) => ProfilePage(),
           '/onboarding': (context) => OnboardingPage(),
           '/landing': (context) => LandingPage(),
           '/inventorysettings': (context) => InventorySettingsPage(),
           '/addedit': (context) => AddEditItemPage(),
-          '/shoppinglist': (context) => ShoppingListPage(),
+          // '/shoppinglist': (context) => ShoppingListPage(),
         },
       ),
     );

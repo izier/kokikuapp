@@ -1,13 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/constants/variables/theme.dart';
+import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
-import 'package:kokiku/datas/models/remote/item.dart';
+import 'package:kokiku/datas/models/remote/inventory_item.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
 import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
+import 'package:kokiku/presentations/widgets/access_id_input.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class InventoryPage extends StatefulWidget {
@@ -23,6 +27,7 @@ class _InventoryPageState extends State<InventoryPage> {
   String? searchText = '';
   bool groupBy = false;
 
+  List<AccessId> accessIds = [];
   List<ItemCategory> categories = [];
   List<Location> locations = [];
   List<Sublocation> sublocations = [];
@@ -68,9 +73,11 @@ class _InventoryPageState extends State<InventoryPage> {
           }
 
           if (state is InventoryLoaded) {
-            var items = state.items;
+            var items = state.inventoryItems;
 
             // Centralized mapping of titles
+            Map<String, String> accessIdTitles = _mapTitles(state.accessIds);
+            accessIds = state.accessIds;
             Map<String, String> categoryTitles = _mapTitles(state.categories);
             categories = state.categories;
             Map<String, String> locationTitles = _mapTitles(state.locations);
@@ -93,7 +100,7 @@ class _InventoryPageState extends State<InventoryPage> {
                     children: groupedItems.entries.map((entry) {
                       final group = entry.key;
                       final groupItems = entry.value;
-                      String groupTitle = _getGroupTitle(group, categoryTitles, locationTitles, sublocationTitles);
+                      String groupTitle = _getGroupTitle(group, accessIdTitles, categoryTitles, locationTitles, sublocationTitles);
 
                       return Theme(
                         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -101,7 +108,7 @@ class _InventoryPageState extends State<InventoryPage> {
                           backgroundColor: Theme.of(context).cardTheme.color,
                           collapsedBackgroundColor: Theme.of(context).cardTheme.color,
                           title: Text(groupTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          children: groupItems.map<Widget>((item) => _buildItemTile(context, item, categoryTitles, locationTitles, sublocationTitles)).toList(),
+                          children: groupItems.map<Widget>((item) => _buildItemTile(context, item, accessIdTitles, categoryTitles, locationTitles, sublocationTitles)).toList(),
                         ),
                       );
                     }).toList(),
@@ -110,7 +117,7 @@ class _InventoryPageState extends State<InventoryPage> {
                       ? ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (context, index) {
-                      return _buildItemTile(context, items[index], categoryTitles, locationTitles, sublocationTitles);
+                      return _buildItemTile(context, items[index], accessIdTitles, categoryTitles, locationTitles, sublocationTitles);
                     },
                   )
                       : Center(
@@ -118,6 +125,12 @@ class _InventoryPageState extends State<InventoryPage> {
                   ),
                 ),
               ],
+            );
+          }
+
+          if (state is InventoryNoAccessIds) {
+            return Center(
+              child: AccessIdInput(),
             );
           }
 
@@ -129,23 +142,29 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Widget _buildSkeletonLoader() {
     Map<String,String> empty = _mapTitles([]);
-    Item item = Item(id: '', name: '', quantity: 1, userId: '');
+    InventoryItem item = InventoryItem(id: '', name: '', quantity: 1, accessId: '');
     return Column(
       children: [
-        _buildSearchAndFilterSection(InventoryLoaded([], [], [], [])),
+        _buildSearchAndFilterSection(InventoryLoaded(
+          accessIds: [],
+          categories: [],
+          locations: [],
+          sublocations: [],
+          inventoryItems: [],
+        )),
         Expanded(
           child: groupBy
               ? ListView(
             children: [].map((entry) {
               final group = entry.key;
               final groupItems = entry.value;
-              String groupTitle = _getGroupTitle(group, empty, empty, empty);
+              String groupTitle = _getGroupTitle(group, empty, empty, empty, empty);
 
               return Theme(
                 data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   title: Text(groupTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  children: groupItems.map<Widget>((item) => _buildItemTile(context, item, empty, empty, empty)).toList(),
+                  children: groupItems.map<Widget>((item) => _buildItemTile(context, item, empty, empty, empty, empty)).toList(),
                 ),
               );
             }).toList(),
@@ -154,7 +173,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 child: ListView.builder(
                             itemCount: 4,
                             itemBuilder: (context, index) {
-                return _buildItemTile(context, item, empty, empty, empty);
+                return _buildItemTile(context, item, empty, empty, empty, empty);
                             },
                           ),
               ),
@@ -167,7 +186,7 @@ class _InventoryPageState extends State<InventoryPage> {
     return { for (var item in items) (item as dynamic).id : item.name };
   }
 
-  List<Item> _applyFilters(List<Item> items, InventoryLoaded state) {
+  List<InventoryItem> _applyFilters(List<InventoryItem> items, InventoryLoaded state) {
     if (searchText != null && searchText!.isNotEmpty) {
       items = items.where((item) => item.name.toLowerCase().contains(searchText!.toLowerCase())).toList();
     }
@@ -175,6 +194,8 @@ class _InventoryPageState extends State<InventoryPage> {
     if (selectedFilterType != null && selectedFilterValue != null) {
       items = items.where((item) {
         switch (selectedFilterType) {
+          case 'Access Id':
+            return item.accessId == selectedFilterValue;
           case 'Category':
             return item.categoryId == selectedFilterValue;
           case 'Location':
@@ -189,10 +210,12 @@ class _InventoryPageState extends State<InventoryPage> {
     return items;
   }
 
-  Map<String, List<Item>> _groupItems(List<Item> items) {
-    Map<String, List<Item>> groupedItems = {};
+  Map<String, List<InventoryItem>> _groupItems(List<InventoryItem> items) {
+    Map<String, List<InventoryItem>> groupedItems = {};
     for (var item in items) {
-      final key = selectedFilterType == 'Category'
+      final key = selectedFilterType == 'Access Id'
+          ? item.accessId
+          : selectedFilterType == 'Category'
           ? item.categoryId
           : selectedFilterType == 'Location'
           ? item.locationId ?? 'Unspecified'
@@ -202,9 +225,11 @@ class _InventoryPageState extends State<InventoryPage> {
     return groupedItems;
   }
 
-  String _getGroupTitle(String group, Map<String, String> categoryTitles, Map<String, String> locationTitles, Map<String, String> sublocationTitles) {
+  String _getGroupTitle(String group, Map<String, String> accessIdTitles, Map<String, String> categoryTitles, Map<String, String> locationTitles, Map<String, String> sublocationTitles) {
     final localization = LocalizationService.of(context)!;
     switch (selectedFilterType) {
+      case 'Access Id':
+        return accessIdTitles[group] ?? localization.translate('uknown_access_id');
       case 'Category':
         return categoryTitles[group] ?? localization.translate('unknown_category');
       case 'Location':
@@ -216,7 +241,7 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
-  Widget _buildItemTile(BuildContext context, Item item, Map<String, String> categoryTitles, Map<String, String> locationTitles, Map<String, String> sublocationTitles) {
+  Widget _buildItemTile(BuildContext context, InventoryItem item, Map<String, String> accessIdTitles, Map<String, String> categoryTitles, Map<String, String> locationTitles, Map<String, String> sublocationTitles) {
     final localization = LocalizationService.of(context)!;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -225,13 +250,14 @@ class _InventoryPageState extends State<InventoryPage> {
       child: ListTile(
         onTap: () {
           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddEditItemPage(
-                item: item,
-                categories: categories,
-                locations: locations,
-                sublocations: sublocations,
-              ))).whenComplete(loadData);
+            context,
+            MaterialPageRoute(builder: (context) => AddEditItemPage(
+              item: item,
+              accessIds: accessIds,
+              categories: categories,
+              locations: locations,
+              sublocations: sublocations,
+            ))).whenComplete(loadData);
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         title: Text(
@@ -256,7 +282,7 @@ class _InventoryPageState extends State<InventoryPage> {
               ),
             if (item.expDate != null)
               Text(
-                "${localization.translate('exp_date')}: ${item.expDate}",
+                "${localization.translate('exp_date')}: ${timestamptToString(item.expDate!)}",
               ),
           ],
         ),
@@ -301,6 +327,7 @@ class _InventoryPageState extends State<InventoryPage> {
                     value: selectedFilterType,
                     hint: Text(localization.translate('filter_by')),
                     items: const [
+                      DropdownMenuItem(value: 'Access Id', child: Text('Access Id')),
                       DropdownMenuItem(value: 'Category', child: Text('Category')),
                       DropdownMenuItem(value: 'Location', child: Text('Location')),
                       DropdownMenuItem(value: 'Sublocation', child: Text('Sublocation')),
@@ -347,7 +374,9 @@ class _InventoryPageState extends State<InventoryPage> {
   List<DropdownMenuItem<String>> _getFilterItems(InventoryLoaded state) {
     Set<String?> filterItems = {};
 
-    if (selectedFilterType == 'Category') {
+    if (selectedFilterType == 'Access Id') {
+      filterItems = state.accessIds.map((access) => access.id).toSet();
+    } else if (selectedFilterType == 'Category') {
       filterItems = state.categories.map((category) => category.id).toSet();
     } else if (selectedFilterType == 'Location') {
       filterItems = state.locations.map((location) => location.id).toSet();
@@ -357,7 +386,9 @@ class _InventoryPageState extends State<InventoryPage> {
 
     return filterItems.map((value) {
       String title = '';
-      if (selectedFilterType == 'Category') {
+      if (selectedFilterType == 'Access Id') {
+        title = state.accessIds.firstWhere((access) => access.id == value).name ?? 'Unknown';
+      } else if (selectedFilterType == 'Category') {
         title = state.categories.firstWhere((category) => category.id == value).name ?? 'Unknown';
       } else if (selectedFilterType == 'Location') {
         title = state.locations.firstWhere((location) => location.id == value).name ?? 'Unknown';
@@ -366,5 +397,9 @@ class _InventoryPageState extends State<InventoryPage> {
       }
       return DropdownMenuItem(value: value, child: Text(title));
     }).toList();
+  }
+
+  String timestamptToString(Timestamp timestamp) {
+    return DateFormat('dd MMMM yyyy').format(timestamp.toDate());
   }
 }

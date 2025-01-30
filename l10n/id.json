@@ -65,5 +65,7 @@
   "error_loading_inventory_settings": "Terjadi kesalahan saat memuat pengaturan inventaris.",
   "add_new": "Tambah",
   "delete_item_confirmation": "Apakah Anda yakin ingin menghapus item ini?",
-  "update": "Perbarui"
+  "update": "Perbarui",
+  "access_id": "Access Id",
+  "add_new_access_id": "Tambah Access Id Baru"
 }

@@ -9,6 +9,7 @@ class ShoppingListItem {
   final int quantity;
   final bool isBought;
   final Timestamp createdAt;
+  final String accessId;
 
   ShoppingListItem({
     required this.id,
@@ -19,6 +20,7 @@ class ShoppingListItem {
     required this.quantity,
     required this.isBought,
     required this.createdAt,
+    required this.accessId,
   });
 
   factory ShoppingListItem.fromFirestore(DocumentSnapshot doc) {
@@ -32,6 +34,7 @@ class ShoppingListItem {
       quantity: data['quantity'],
       isBought: data['isBought'],
       createdAt: data['createdAt'],
+      accessId: data['accessId'],
     );
   }
 
@@ -44,6 +47,7 @@ class ShoppingListItem {
       'quantity': quantity,
       'isBought': isBought,
       'createdAt': createdAt,
+      'accessId': accessId,
     };
   }
 
@@ -56,6 +60,7 @@ class ShoppingListItem {
     int? quantity,
     bool? isBought,
     Timestamp? createdAt,
+    String? accessId,
   }) {
     return ShoppingListItem(
       id: id ?? this.id,
@@ -66,6 +71,7 @@ class ShoppingListItem {
       quantity: quantity ?? this.quantity,
       isBought: isBought ?? this.isBought,
       createdAt: createdAt ?? this.createdAt,
+      accessId: accessId ?? this.accessId,
     );
   }
 }

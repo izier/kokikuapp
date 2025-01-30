@@ -1,76 +1,57 @@
-import 'package:flutter/material.dart';
+
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/material.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
-import 'package:kokiku/datas/models/remote/location.dart';
 
-class LocationDropdown extends StatelessWidget {
-  final List<Location> locations;
-  final Location? selectedLocation;
-  final Function(Location?) onChanged;
-  final bool? disableToAdd;
+class AccessIdDropdown extends StatelessWidget {
+  final List<AccessId> accessIds;
   final AccessId? selectedAccessId;
+  final Function(AccessId?) onChanged;
 
-  const LocationDropdown({
+  const AccessIdDropdown({
     super.key,
-    required this.locations,
-    required this.selectedLocation,
-    required this.onChanged,
-    this.disableToAdd,
+    required this.accessIds,
     required this.selectedAccessId,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    List<Location> usedList;
-
-    if (selectedAccessId == null) {
-      return const SizedBox();
-    }
-
-    if (disableToAdd != null) {
-      usedList = [
-        ...locations.where((location) => location.accessId == selectedAccessId!.id).map((e) => e)
-      ];
-    } else {
-      usedList = [
-        Location(id: 'add', name: 'Add New Location', accessId: 'add'),
-        ...locations.where((location) => location.accessId == selectedAccessId!.id).map((e) => e)
-      ];
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Location',
+          'Access Id',
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        DropdownSearch<Location>(
-          selectedItem: selectedLocation,
+        DropdownSearch<AccessId>(
+          selectedItem: selectedAccessId,
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
-          items: (filter, infiniteScrollProps) => usedList,
+          items: (filter, infiniteScrollProps) => [
+            ...accessIds.map((e) => e)
+          ],
           itemAsString: (item) => item.name,
           onChanged: onChanged,
           popupProps: PopupProps.menu(
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search location...',
+                hintText: 'Search',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
             showSearchBox: true,
-            constraints: BoxConstraints(maxHeight: 300), // Adjust dropdown height
+            constraints: BoxConstraints(maxHeight: 300), // Adjust the height of the dropdown menu
           ),
           enabled: true,
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              hintText: 'Select a location',
+              hintText: 'Select an access id',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

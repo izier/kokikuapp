@@ -59,3 +59,9 @@ class ShoppingListUpdated extends ShoppingListState {
 
   ShoppingListUpdated(this.shoppingList);
 }
+
+class ShoppingLIstItemCreated extends ShoppingListState {
+  final ShoppingListItem shoppingListItem;
+
+  ShoppingLIstItemCreated(this.shoppingListItem);
+}

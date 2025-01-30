@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ItemCategory {
   final String id;
   final String name;
-  final String userId;
+  final String accessId;
 
   ItemCategory({
     required this.id,
     required this.name,
-    required this.userId,
+    required this.accessId,
   });
 
   // Factory constructor to create Category from Firestore DocumentSnapshot
@@ -17,7 +17,7 @@ class ItemCategory {
     return ItemCategory(
       id: doc.id,
       name: data['name'] ?? '',
-      userId: data['userId'] ?? '',
+      accessId: data['accessId'] ?? '',
     );
   }
 
@@ -25,7 +25,7 @@ class ItemCategory {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'userId': userId,
+      'accessId': accessId,
     };
   }
 
@@ -33,12 +33,12 @@ class ItemCategory {
   ItemCategory copyWith({
     String? id,
     String? name,
-    String? userId,
+    String? accessId,
   }) {
     return ItemCategory(
       id: id ?? this.id,
       name: name ?? this.name,
-      userId: userId ?? this.userId,
+      accessId: accessId ?? this.accessId,
     );
   }
 }

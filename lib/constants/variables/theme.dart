@@ -45,6 +45,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.bold),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        iconColor: Colors.white
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -136,6 +137,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        iconColor: Colors.white
       ),
     ),
     textButtonTheme: TextButtonThemeData(

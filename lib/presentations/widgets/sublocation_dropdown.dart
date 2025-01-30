@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
 
@@ -8,6 +9,7 @@ class SublocationDropdown extends StatelessWidget {
   final Sublocation? selectedSublocation;
   final Function(Sublocation?) onChanged;
   final Location? selectedLocation;
+  final AccessId? selectedAccessId;
 
   const SublocationDropdown({
     super.key,
@@ -15,11 +17,12 @@ class SublocationDropdown extends StatelessWidget {
     required this.selectedSublocation,
     required this.onChanged,
     required this.selectedLocation,
+    required this.selectedAccessId,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (selectedLocation == null) {
+    if (selectedLocation == null || selectedAccessId == null) {
       return const SizedBox(); // Return empty space if no location is selected
     }
 
@@ -38,8 +41,8 @@ class SublocationDropdown extends StatelessWidget {
           compareFn: (item, selectedItem) => item.id == selectedItem.id,
           items: (filter, infiniteScrollProps) {
             return [
-              Sublocation(id: 'add', locationId: 'add', name: 'Add New Sublocation', userId: 'add'), // Add new option
-              ...sublocations.where((sublocation) => sublocation.locationId == selectedLocation!.id).map((e) => e)
+              Sublocation(id: 'add', locationId: 'add', name: 'Add New Sublocation', accessId: 'add'), // Add new option
+              ...sublocations.where((sublocation) => sublocation.locationId == selectedLocation!.id && sublocation.accessId == selectedAccessId!.id).map((e) => e)
             ];
           },
           itemAsString: (item) => item.name, // Display the name of sublocation

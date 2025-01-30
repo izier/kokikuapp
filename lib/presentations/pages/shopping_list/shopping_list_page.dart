@@ -40,16 +40,16 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                   title: Text(shoppingList.name),
                   onTap: () {
                     // Navigate to the shopping list detail page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShoppingListDetailPage(
-                          shoppingListId: shoppingList.id,
-                          shoppingListName: shoppingList.name,
-                          shoppingListDescription: shoppingList.description,
-                        ),
-                      ),
-                    ).whenComplete(() => _loadData());
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => ShoppingListDetailPage(
+                    //       shoppingListId: shoppingList.id,
+                    //       shoppingListName: shoppingList.name,
+                    //       shoppingListDescription: shoppingList.description,
+                    //     ),
+                    //   ),
+                    // ).whenComplete(() => _loadData());
                   },
                 );
               },

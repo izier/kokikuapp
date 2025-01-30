@@ -26,12 +26,10 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
-      showToast(
+      showSuccessToast(
         context: context,
-        icon: Icon(Icons.check),
         title: localizations.translate('loggedOut'),
         message: localizations.translate('loggedOutSub'),
-        color: Colors.green,
       );
       Navigator.pushNamedAndRemoveUntil(
         context,
@@ -40,12 +38,10 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     } catch (e) {
       log("Error: $e");
-      showToast(
+      showErrorToast(
         context: context,
-        icon: Icon(Icons.cancel),
         title: localizations.translate('loggedOutFail'),
         message: e.toString(),
-        color: Colors.red,
       );
     }
   }
