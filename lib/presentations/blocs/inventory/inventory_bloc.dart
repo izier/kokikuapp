@@ -307,6 +307,35 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
       }
     });
 
+    on<ConnectToAccessId> ((event, emit) async {
+      emit(InventoryLoading());
+      try {
+        final connectivityResult = await Connectivity().checkConnectivity();
+        if (connectivityResult.contains(ConnectivityResult.none)) {
+          emit(InventoryNoInternet());
+          return;
+        }
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          emit(InventoryError('User not authenticated'));
+          return;
+        }
+
+        String? accessId = event.accessId;
+
+        await _firestore.collection('users').doc(user.uid).update({
+          'accessIds': FieldValue.arrayUnion([accessId])
+        });
+        emit(AddAccessIdSuccess());
+        add(LoadInventory());
+      } catch (e, stackTrace) {
+        log("Error adding access id: $e");
+        log("Stack trace: $stackTrace");
+        emit(EditInventoryItemError('Failed to add access id: $e'));
+      }
+    });
+
     on<AddCategory>((event, emit) async {
       emit(InventoryLoading());
       try {

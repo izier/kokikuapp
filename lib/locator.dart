@@ -8,6 +8,5 @@ final GetIt getIt = GetIt.instance;
 void setupLocator() {
   getIt.registerFactory(() => InventoryBloc());
   getIt.registerFactory(() => ProfileBloc());
-  // getIt.registerFactory(() => ItemBloc());
   getIt.registerFactory(() => ShoppingListBloc());
 }

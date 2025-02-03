@@ -19,7 +19,6 @@ import 'package:kokiku/presentations/pages/main_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/landing_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/onboarding_page.dart';
 import 'package:kokiku/presentations/pages/profile/profile_page.dart';
-import 'package:kokiku/presentations/pages/shopping_list/shopping_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {

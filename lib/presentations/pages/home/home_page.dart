@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
           ],
         )
       ),
-      body: Container(),
+      body: Center(),
     );
   }
 }

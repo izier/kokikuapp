@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
@@ -6,7 +8,9 @@ import 'package:kokiku/datas/models/remote/category.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
+import 'package:kokiku/presentations/pages/inventory/qr_scanner_page.dart';
 import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
+import 'package:kokiku/presentations/widgets/custom_toast.dart';
 import 'package:kokiku/presentations/widgets/location_dropdown.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -51,12 +55,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
       body: BlocListener<InventoryBloc, InventoryState>(
         listener: (context, state) {
           if (state is InventoryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            showErrorToast(context: context, title: 'An Error Has Occured', message: state.message);
           }
         },
         child: BlocBuilder<InventoryBloc, InventoryState>(
@@ -141,19 +140,54 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               );
             },
           ),
-          // Align(
-          //   alignment: Alignment.bottomCenter,
-          //   child: SizedBox(
-          //     width: double.infinity,
-          //     child: ElevatedButton(
-          //       onPressed: onAdd,
-          //       child: Text('${localization.translate('add_new')} Access Id'),
-          //     ),
-          //   ),
-          // ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _openQRScanner,
+                child: Text('${localization.translate('connect')} Access ID'),
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _openQRScanner() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QrScannerPage(onScan: _saveAccessId),
+      ),
+    );
+  }
+
+  Future<void> _saveAccessId(String scannedCode) async {
+    final auth = FirebaseAuth.instance;
+    final firestore = FirebaseFirestore.instance;
+
+    if (scannedCode.isEmpty) return;
+
+    final user = auth.currentUser;
+    if (user == null) return;
+
+    try {
+      var accessIdDoc = await firestore.collection('accessIds').doc(scannedCode).get();
+
+      if (accessIdDoc.exists) {
+        await firestore.collection('users').doc(user.uid).update({
+          'accessIds': FieldValue.arrayUnion([scannedCode])
+        });
+        showSuccessToast(context: context, title: 'Access ID Connected', message: 'You have successfully connected the Access ID: $scannedCode}');
+        context.read<InventoryBloc>().add(LoadInventory());
+      } else {
+        showErrorToast(context: context, title: 'An Error Has Occured', message: 'Invalid Access ID');
+      }
+    } catch (e) {
+      showErrorToast(context: context, title: 'An Error Has Occured', message: 'Error saving Access ID');
+    }
   }
 
   void _showQrDialog(String accessId) {
@@ -169,6 +203,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               data: accessId,
               version: QrVersions.auto,
               size: 500.0,
+              backgroundColor: Colors.white,
             ),
           ),
         ),

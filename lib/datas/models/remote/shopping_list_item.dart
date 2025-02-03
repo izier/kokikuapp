@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShoppingListItem {
-  final String id;
+  final String? id;
+  final String itemId;
   final String shoppingListId;
   final String name;
   final String? description;
@@ -12,7 +13,8 @@ class ShoppingListItem {
   final String accessId;
 
   ShoppingListItem({
-    required this.id,
+    this.id,
+    required this.itemId,
     required this.shoppingListId,
     required this.name,
     this.description,
@@ -27,6 +29,7 @@ class ShoppingListItem {
     final data = doc.data() as Map<String, dynamic>;
     return ShoppingListItem(
       id: doc.id,
+      itemId: data['itemId'],
       shoppingListId: data['shoppingListId'],
       name: data['name'],
       description: data['description'],
@@ -41,6 +44,7 @@ class ShoppingListItem {
   Map<String, dynamic> toMap() {
     return {
       'shoppingListId': shoppingListId,
+      'itemId': itemId,
       'name': name,
       'description': description,
       'categoryId': categoryId,
@@ -54,6 +58,7 @@ class ShoppingListItem {
   ShoppingListItem copyWith({
     String? id,
     String? shoppingListId,
+    String? itemId,
     String? name,
     String? description,
     String? categoryId,
@@ -64,6 +69,7 @@ class ShoppingListItem {
   }) {
     return ShoppingListItem(
       id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
       shoppingListId: shoppingListId ?? this.shoppingListId,
       name: name ?? this.name,
       description: description ?? this.description,

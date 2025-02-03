@@ -12,6 +12,7 @@ import 'package:kokiku/datas/models/remote/sublocation.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
 import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
 import 'package:kokiku/presentations/widgets/category_dropdown.dart';
+import 'package:kokiku/presentations/widgets/custom_toast.dart';
 import 'package:kokiku/presentations/widgets/location_dropdown.dart';
 import 'package:kokiku/presentations/widgets/sublocation_dropdown.dart';
 
@@ -79,7 +80,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.item == null ? 'Add Item' : 'Edit Item'),
         actions: [
@@ -93,7 +93,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
         child: BlocListener<InventoryBloc, InventoryState>(
           listener: (context, state) {
             if (state is InventoryError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+              showErrorToast(context: context, title: 'An Error Has Occured', message: state.message);
             }
           },
           child: BlocBuilder<InventoryBloc, InventoryState>(
@@ -114,11 +114,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                           accessIds: state.accessIds,
                           selectedAccessId: selectedAccessId,
                           onChanged: (value) {
-                            if (value?.id == 'add') {
-                              _showAddCategoryModal(context);
-                            } else {
-                              setState(() => selectedAccessId = value);
-                            }
+                            setState(() => selectedAccessId = value);
                           },
                         ),
                         const SizedBox(height: 16),
@@ -135,7 +131,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             }
                           },
                         ),
-                        const SizedBox(height: 16),
+                        selectedAccessId != null ?
+                        const SizedBox(height: 16) : Container(),
 
                         // Name Text Field
                         _buildTextField('Name', nameController, 'Enter a name'),
@@ -153,7 +150,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             }
                           },
                         ),
-                        const SizedBox(height: 16),
+                        selectedAccessId != null ?
+                        const SizedBox(height: 16) : Container(),
 
                         SublocationDropdown(
                           selectedAccessId: selectedAccessId,
@@ -168,7 +166,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             }
                           },
                         ),
-                        const SizedBox(height: 16),
+                        selectedLocation != null ?
+                        const SizedBox(height: 16) : Container(),
 
                         // Quantity Row
                         _buildQuantityRow(),

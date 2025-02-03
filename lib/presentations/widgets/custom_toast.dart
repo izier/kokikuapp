@@ -1,6 +1,7 @@
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:flutter/material.dart';
+import 'package:kokiku/constants/variables/theme.dart';
 
 void showToast({
   required BuildContext context,
@@ -14,14 +15,16 @@ void showToast({
     builder: (context) => ToastCard(
       leading: Icon(icon.icon, color: Colors.white),
       title: Text(
-        title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: Colors.white
-        )
+          title,
+          style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
+              color: Colors.white
+          )
       ),
       subtitle: Text(
-        message, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white
-        )
+          message,
+          style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
+              color: Colors.white
+          )
       ),
       color: color,
     ),
@@ -38,14 +41,16 @@ void showSuccessToast({
     builder: (context) => ToastCard(
       leading: Icon(Icons.check, color: Colors.white),
       title: Text(
-          title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: Colors.white
-      )
+          title,
+          style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
+              color: Colors.white
+          )
       ),
       subtitle: Text(
-          message, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white
-      )
+          message,
+          style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
+              color: Colors.white
+          )
       ),
       color: Colors.green,
     ),
@@ -62,14 +67,16 @@ void showErrorToast({
     builder: (context) => ToastCard(
       leading: Icon(Icons.cancel, color: Colors.white),
       title: Text(
-          title, style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        title,
+        style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
           color: Colors.white
-      )
+        )
       ),
       subtitle: Text(
-          message, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        message,
+        style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
           color: Colors.white
-      )
+        )
       ),
       color: Colors.red,
     ),

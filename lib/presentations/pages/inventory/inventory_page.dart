@@ -12,6 +12,7 @@ import 'package:kokiku/datas/models/remote/sublocation.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
 import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
 import 'package:kokiku/presentations/widgets/access_id_input.dart';
+import 'package:kokiku/presentations/widgets/custom_toast.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class InventoryPage extends StatefulWidget {
@@ -62,9 +63,7 @@ class _InventoryPageState extends State<InventoryPage> {
       body: BlocConsumer<InventoryBloc, InventoryState>(
         listener: (context, state) {
           if (state is InventoryError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            showErrorToast(context: context, title: 'An Error Has Occured', message: state.message);
           }
         },
         builder: (context, state) {
@@ -183,7 +182,7 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   Map<String, String> _mapTitles<T>(List<T> items) {
-    return { for (var item in items) (item as dynamic).id : item.name };
+    return { for (final item in items) (item as dynamic).id : item.name };
   }
 
   List<InventoryItem> _applyFilters(List<InventoryItem> items, InventoryLoaded state) {
@@ -194,7 +193,7 @@ class _InventoryPageState extends State<InventoryPage> {
     if (selectedFilterType != null && selectedFilterValue != null) {
       items = items.where((item) {
         switch (selectedFilterType) {
-          case 'Access Id':
+          case 'Access ID':
             return item.accessId == selectedFilterValue;
           case 'Category':
             return item.categoryId == selectedFilterValue;
@@ -212,8 +211,8 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Map<String, List<InventoryItem>> _groupItems(List<InventoryItem> items) {
     Map<String, List<InventoryItem>> groupedItems = {};
-    for (var item in items) {
-      final key = selectedFilterType == 'Access Id'
+    for (final item in items) {
+      final key = selectedFilterType == 'Access ID'
           ? item.accessId
           : selectedFilterType == 'Category'
           ? item.categoryId
@@ -228,7 +227,7 @@ class _InventoryPageState extends State<InventoryPage> {
   String _getGroupTitle(String group, Map<String, String> accessIdTitles, Map<String, String> categoryTitles, Map<String, String> locationTitles, Map<String, String> sublocationTitles) {
     final localization = LocalizationService.of(context)!;
     switch (selectedFilterType) {
-      case 'Access Id':
+      case 'Access ID':
         return accessIdTitles[group] ?? localization.translate('uknown_access_id');
       case 'Category':
         return categoryTitles[group] ?? localization.translate('unknown_category');
@@ -260,9 +259,23 @@ class _InventoryPageState extends State<InventoryPage> {
             ))).whenComplete(loadData);
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Text(
-          item.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Text(
+              item.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            if (item.quantity > 0)
+              Text(
+                " (${item.quantity})",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            if (item.quantity == 0)
+              Text(
+                " (${item.quantity})",
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,11 +339,11 @@ class _InventoryPageState extends State<InventoryPage> {
                   DropdownButton<String>(
                     value: selectedFilterType,
                     hint: Text(localization.translate('filter_by')),
-                    items: const [
-                      DropdownMenuItem(value: 'Access Id', child: Text('Access Id')),
-                      DropdownMenuItem(value: 'Category', child: Text('Category')),
-                      DropdownMenuItem(value: 'Location', child: Text('Location')),
-                      DropdownMenuItem(value: 'Sublocation', child: Text('Sublocation')),
+                    items: [
+                      DropdownMenuItem(value: 'Access ID', child: Text(localization.translate('access_id'))),
+                      DropdownMenuItem(value: 'Category', child: Text(localization.translate('category'))),
+                      DropdownMenuItem(value: 'Location', child: Text(localization.translate('location'))),
+                      DropdownMenuItem(value: 'Sublocation', child: Text(localization.translate('sublocation'))),
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -374,7 +387,7 @@ class _InventoryPageState extends State<InventoryPage> {
   List<DropdownMenuItem<String>> _getFilterItems(InventoryLoaded state) {
     Set<String?> filterItems = {};
 
-    if (selectedFilterType == 'Access Id') {
+    if (selectedFilterType == 'Access ID') {
       filterItems = state.accessIds.map((access) => access.id).toSet();
     } else if (selectedFilterType == 'Category') {
       filterItems = state.categories.map((category) => category.id).toSet();
@@ -386,7 +399,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
     return filterItems.map((value) {
       String title = '';
-      if (selectedFilterType == 'Access Id') {
+      if (selectedFilterType == 'Access ID') {
         title = state.accessIds.firstWhere((access) => access.id == value).name ?? 'Unknown';
       } else if (selectedFilterType == 'Category') {
         title = state.categories.firstWhere((category) => category.id == value).name ?? 'Unknown';

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShoppingList {
-  final String id;
+  final String? id;
   final String accessId;
   final String name;
   final String? description;
@@ -9,7 +9,7 @@ class ShoppingList {
   final List<String> items;
 
   ShoppingList({
-    required this.id,
+    this.id,
     required this.accessId,
     required this.name,
     this.description,

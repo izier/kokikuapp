@@ -92,6 +92,16 @@ class AddAccessIdError extends InventoryState {
   List<Object> get props => [message];
 }
 
+class ConnectToAccessIdSuccess extends InventoryState {}
+
+class ConnectToAccessIdError extends InventoryState {
+  final String message;
+
+  const ConnectToAccessIdError(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
 
 class AddCategoriesSuccess extends InventoryState {}
 

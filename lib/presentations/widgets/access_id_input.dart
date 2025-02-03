@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
+import 'package:kokiku/presentations/pages/inventory/qr_scanner_page.dart';
 import 'package:kokiku/presentations/widgets/custom_toast.dart';
 import 'package:uuid/uuid.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 class AccessIdInput extends StatefulWidget {
   const AccessIdInput({super.key});
@@ -23,14 +24,16 @@ class _AccessIdInputState extends State<AccessIdInput> {
     final user = _auth.currentUser;
     if (user == null) return;
 
+    final localization = LocalizationService.of(context)!;
+
     String? accessIdName = await _showCreateAccessIdDialog(context);
     if (accessIdName == null || accessIdName.isEmpty) {
       if (mounted) {
         showToast(
           context: context,
           icon: Icon(Icons.question_mark),
-          title: 'No Name Entered',
-          message: 'Please enter a name for the Access ID',
+          title: localization.translate('no_name_entered'),
+          message: localization.translate('enter_name_for_access_id'),
           color: Colors.black,
         );
       }
@@ -51,6 +54,11 @@ class _AccessIdInputState extends State<AccessIdInput> {
         'accessIds': FieldValue.arrayUnion([newAccessId])
       });
 
+      showSuccessToast(
+        context: context,
+        title: localization.translate('access_id_added'),
+        message: "${localization.translate('successfully_added_access_id')}: ${newAccess.name}",
+      );
       if (mounted) {
         context.read<InventoryBloc>().add(LoadInventory());
       }
@@ -58,8 +66,8 @@ class _AccessIdInputState extends State<AccessIdInput> {
       if (mounted) {
         showErrorToast(
           context: context,
-          title: 'Error Occurred!',
-          message: 'Error: $e',
+          title: localization.translate('error_occurred'),
+          message: "${localization.translate('error')}: $e",
         );
       }
     }
@@ -69,12 +77,13 @@ class _AccessIdInputState extends State<AccessIdInput> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QRScannerScreen(onScan: _saveAccessId),
+        builder: (context) => QrScannerPage(onScan: _saveAccessId),
       ),
     );
   }
 
   Future<void> _saveAccessId(String scannedCode) async {
+    final localization = LocalizationService.of(context)!;
     if (scannedCode.isEmpty) return;
 
     final user = _auth.currentUser;
@@ -87,35 +96,45 @@ class _AccessIdInputState extends State<AccessIdInput> {
         await _firestore.collection('users').doc(user.uid).update({
           'accessIds': FieldValue.arrayUnion([scannedCode])
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Access ID added: $scannedCode')));
-        if (mounted) {
-          context.read<InventoryBloc>().add(LoadInventory());
-        }
-        Navigator.pop(context);
+        showSuccessToast(
+          context: context,
+          title: localization.translate('access_id_connected'),
+          message: "${localization.translate('successfully_connected_access_id')}: $scannedCode",
+        );
+        context.read<InventoryBloc>().add(LoadInventory());
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid Access ID')));
+        showErrorToast(
+          context: context,
+          title: localization.translate('error_occurred'),
+          message: localization.translate('invalid_access_id'),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving Access ID')));
+      showErrorToast(
+        context: context,
+        title: localization.translate('error_occurred'),
+        message: localization.translate('error_saving_access_id'),
+      );
     }
   }
 
   Future<String?> _showCreateAccessIdDialog(BuildContext context) {
     TextEditingController nameController = TextEditingController();
+    final localization = LocalizationService.of(context)!;
 
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Create New Access ID'),
+          title: Text(localization.translate('create_new_access_id')),
           content: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: nameController,
               decoration: InputDecoration(
-                labelText: 'Access ID Name',
-                hintText: 'i.e. My House',
+                labelText: localization.translate('access_id_name'),
+                hintText: localization.translate('i_e_my_house'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -127,13 +146,13 @@ class _AccessIdInputState extends State<AccessIdInput> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel'),
+              child: Text(localization.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context, nameController.text.trim());
               },
-              child: Text('Create Access ID'),
+              child: Text(localization.translate('create_access_id')),
             ),
           ],
         );
@@ -143,13 +162,15 @@ class _AccessIdInputState extends State<AccessIdInput> {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "It appears you haven't added any Access ID.",
+            localization.translate('no_access_id_added'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
@@ -157,36 +178,14 @@ class _AccessIdInputState extends State<AccessIdInput> {
           ElevatedButton.icon(
             onPressed: _createNewAccessId,
             icon: Icon(Icons.add),
-            label: Text("Create New Access ID"),
+            label: Text(localization.translate('create_new_access_id')),
           ),
           ElevatedButton.icon(
             onPressed: _openQRScanner,
             icon: Icon(Icons.qr_code_scanner),
-            label: Text("Scan QR Code"),
+            label: Text(localization.translate('scan_qr_code')),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class QRScannerScreen extends StatelessWidget {
-  final Function(String) onScan;
-
-  const QRScannerScreen({super.key, required this.onScan});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Scan QR Code")),
-      body: MobileScanner(
-        onDetect: (capture) {
-          final List<Barcode> barcodes = capture.barcodes;
-          if (barcodes.isNotEmpty) {
-            String scannedCode = barcodes.first.rawValue ?? "";
-            onScan(scannedCode);
-          }
-        },
       ),
     );
   }
