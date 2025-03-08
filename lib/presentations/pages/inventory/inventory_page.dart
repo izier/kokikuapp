@@ -10,10 +10,9 @@ import 'package:kokiku/datas/models/remote/inventory_item.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
-import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
+import 'package:kokiku/presentations/pages/inventory/inventory_add_edit_item_page.dart';
 import 'package:kokiku/presentations/widgets/access_id_input.dart';
 import 'package:kokiku/presentations/widgets/custom_toast.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -48,6 +47,7 @@ class _InventoryPageState extends State<InventoryPage> {
     final localization = LocalizationService.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text(localization.translate('inventory')),
         elevation: 0,
         centerTitle: true,
@@ -140,8 +140,6 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   Widget _buildSkeletonLoader() {
-    Map<String,String> empty = _mapTitles([]);
-    InventoryItem item = InventoryItem(id: '', name: '', quantity: 1, accessId: '');
     return Column(
       children: [
         _buildSearchAndFilterSection(InventoryLoaded(
@@ -152,30 +150,7 @@ class _InventoryPageState extends State<InventoryPage> {
           inventoryItems: [],
         )),
         Expanded(
-          child: groupBy
-              ? ListView(
-            children: [].map((entry) {
-              final group = entry.key;
-              final groupItems = entry.value;
-              String groupTitle = _getGroupTitle(group, empty, empty, empty, empty);
-
-              return Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  title: Text(groupTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  children: groupItems.map<Widget>((item) => _buildItemTile(context, item, empty, empty, empty, empty)).toList(),
-                ),
-              );
-            }).toList(),
-          )
-              : Skeletonizer(
-                child: ListView.builder(
-                            itemCount: 4,
-                            itemBuilder: (context, index) {
-                return _buildItemTile(context, item, empty, empty, empty, empty);
-                            },
-                          ),
-              ),
+          child: Center(child: CircularProgressIndicator()),
         ),
       ],
     );
@@ -249,14 +224,14 @@ class _InventoryPageState extends State<InventoryPage> {
       child: ListTile(
         onTap: () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddEditItemPage(
-              item: item,
-              accessIds: accessIds,
-              categories: categories,
-              locations: locations,
-              sublocations: sublocations,
-            ))).whenComplete(loadData);
+              context,
+              MaterialPageRoute(builder: (context) => InventoryAddEditItemPage(
+                item: item,
+                accessIds: accessIds,
+                categories: categories,
+                locations: locations,
+                sublocations: sublocations,
+              ))).whenComplete(loadData);
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         title: Row(
@@ -356,7 +331,7 @@ class _InventoryPageState extends State<InventoryPage> {
                   if (selectedFilterType != null)
                     DropdownButton<String>(
                       value: selectedFilterValue,
-                      hint: Text('${localization.translate('select')} $selectedFilterType'),
+                      hint: Text('${localization.translate('select')} ${localization.translate(selectedFilterType!)}'),
                       items: _getFilterItems(state),
                       onChanged: (value) {
                         setState(() {
@@ -416,3 +391,4 @@ class _InventoryPageState extends State<InventoryPage> {
     return DateFormat('dd MMMM yyyy').format(timestamp.toDate());
   }
 }
+

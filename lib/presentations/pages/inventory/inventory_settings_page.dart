@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +40,12 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
 
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text(localization.translate('inventory_settings')),
         centerTitle: true,
         elevation: 0,
         bottom: TabBar(
+          isScrollable: false,
           dividerColor: Colors.transparent,
           controller: _tabController,
           tabs: [
@@ -126,6 +130,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               return Card(
                 elevation: 0,
                 child: ListTile(
+                  contentPadding: EdgeInsets.only(left: 16),
                   title: Text(accessId.name),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -174,11 +179,11 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
     if (user == null) return;
 
     try {
-      var accessIdDoc = await firestore.collection('accessIds').doc(scannedCode).get();
+      var accessIdDoc = await firestore.collection('access_ids').doc(scannedCode).get();
 
       if (accessIdDoc.exists) {
         await firestore.collection('users').doc(user.uid).update({
-          'accessIds': FieldValue.arrayUnion([scannedCode])
+          'access_ids': FieldValue.arrayUnion([scannedCode])
         });
         showSuccessToast(context: context, title: 'Access ID Connected', message: 'You have successfully connected the Access ID: $scannedCode}');
         context.read<InventoryBloc>().add(LoadInventory());
@@ -245,6 +250,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                 return Card(
                   elevation: 0,
                   child: ListTile(
+                    contentPadding: EdgeInsets.only(left: 16),
                     title: Text(itemName),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -313,9 +319,10 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
     required bool isCategory,
     required bool isAccessId,
   }) {
+    log((locations != null).toString());
     final controller = TextEditingController();
     Location? selectedLocation;
-    AccessId? selectedAccessId;
+    AccessId? selectedAccessId = accessIds.first;
     final localization = LocalizationService.of(context)!; // Get the localization instance
 
     showDialog(
@@ -329,7 +336,9 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
               accessIds: accessIds,
               selectedAccessId: selectedAccessId,
               onChanged: (value) {
-                selectedAccessId = value;
+                setState(() {
+                  selectedAccessId = value;
+                });
               },
             ),
             if (!isAccessId) const SizedBox(height: 16),
@@ -343,6 +352,7 @@ class _InventorySettingsPageState extends State<InventorySettingsPage> with Sing
                   selectedLocation = value;
                 },
               ),
+            if (locations != null) const SizedBox(height: 16),
             TextField(
               controller: controller,
               decoration: InputDecoration(

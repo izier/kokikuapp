@@ -9,6 +9,7 @@ class HomePage extends StatelessWidget {
     final localizations = LocalizationService.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Row(
           children: [
             Image.asset(

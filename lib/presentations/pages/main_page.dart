@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/constants/variables/theme.dart';
-import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/user.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
-import 'package:kokiku/presentations/blocs/shopping_list/shopping_list_bloc.dart';
 import 'package:kokiku/presentations/pages/home/home_page.dart';
 import 'package:kokiku/presentations/pages/inventory/inventory_page.dart';
 import 'package:kokiku/presentations/pages/profile/profile_page.dart';
 import 'package:kokiku/presentations/pages/shopping_list/shopping_list_page.dart';
-import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
 import 'package:kokiku/presentations/widgets/custom_toast.dart';
 
 class MainPage extends StatefulWidget {
@@ -43,8 +40,7 @@ class _MainPageState extends State<MainPage> {
         child: const Icon(Icons.add),
         onPressed: () async {
           if (_selectedIndex == 2) {
-            // Show a dialog to add a new shopping list
-            _showAddShoppingListDialog(context);
+            Navigator.pushNamed(context, '/shoppinglistaddedit');
           } else {
             final localization = LocalizationService.of(context)!;
             final user = FirebaseAuth.instance.currentUser;
@@ -95,100 +91,4 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-
-  void _showAddShoppingListDialog(BuildContext context) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final firestore = FirebaseFirestore.instance;
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController descriptionController = TextEditingController();
-    final localization = LocalizationService.of(context)!;
-    AccessId? selectedAccessId;
-    List<String> userAccessIds = [];
-    List<AccessId> accessIds = [];
-
-    final shoppingListBloc = context.read<ShoppingListBloc>();
-
-    final userSnapshot = await firestore
-        .collection('users')
-        .doc(user!.uid)
-        .get();
-
-    final userModel = UserModel.fromFirestore(userSnapshot.data()!, user.uid);
-    userAccessIds = userModel.accessIds;
-
-    if (userAccessIds.isEmpty) {
-      showErrorToast(
-        context: context,
-        title: localization.translate('no_access_id'),
-        message: localization.translate('no_access_id_sub')
-      );
-      return;
-    }
-
-    final accessSnapshot = await firestore
-        .collection('accessIds')
-        .where(FieldPath.documentId, whereIn: userAccessIds)
-        .get();
-
-    accessIds = accessSnapshot.docs
-        .map((doc) => AccessId.fromFirestore(doc))
-        .toList();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Add Shopping List'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AccessIdDropdown(
-                accessIds: accessIds,
-                selectedAccessId: selectedAccessId,
-                onChanged: (value) {
-                  setState(() => selectedAccessId = value);
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Shopping List Name'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description (Optional)'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  // Use the stored bloc instead of accessing context after pop
-                  shoppingListBloc.add(
-                    AddShoppingList(
-                      name: nameController.text,
-                      description: nameController.text,
-                      accessId: selectedAccessId!.id, // Optional field
-                    ),
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
 }

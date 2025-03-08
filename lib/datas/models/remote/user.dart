@@ -22,7 +22,7 @@ class UserModel {
       id: id,
       email: data['email'] ?? '',
       name: data['name'] ?? '',
-      accessIds: List<String>.from(data['accessIds'] ?? []),
+      accessIds: List<String>.from(data['access_ids'] ?? []),
       photoUrl: data['photoUrl'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
@@ -32,7 +32,7 @@ class UserModel {
     return {
       'email': email,
       'name': name,
-      'accessIds': accessIds,
+      'access_ids': accessIds,
       'photoUrl': photoUrl,
       'createdAt': FieldValue.serverTimestamp(),
     };

@@ -1,6 +1,7 @@
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 
 class AccessIdDropdown extends StatelessWidget {
@@ -17,6 +18,7 @@ class AccessIdDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -39,7 +41,7 @@ class AccessIdDropdown extends StatelessWidget {
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: localization.translate('search'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -51,7 +53,7 @@ class AccessIdDropdown extends StatelessWidget {
           enabled: true,
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              hintText: 'Select an access id',
+              hintText: localization.translate('select_access_id'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

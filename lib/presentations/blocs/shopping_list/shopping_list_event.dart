@@ -12,36 +12,48 @@ class LoadShoppingLists extends ShoppingListEvent {
 }
 
 class LoadShoppingListDetail extends ShoppingListEvent {
-  final String shoppingListId;
+  final String? shoppingListId;
 
-  const LoadShoppingListDetail({required this.shoppingListId});
+  const LoadShoppingListDetail({this.shoppingListId});
 
   @override
-  List<Object> get props => [shoppingListId];
+  List<Object> get props => [shoppingListId ?? ''];
 }
 
 class AddShoppingList extends ShoppingListEvent {
   final String accessId;
   final String name;
   final String? description;
+  final List<ShoppingListItem> shoppingListItems;
 
   const AddShoppingList({
     required this.accessId,
     required this.name,
     this.description,
+    required this.shoppingListItems,
   });
 
   @override
-  List<Object> get props => [accessId, name, description ?? ''];
+  List<Object> get props => [accessId, name, description ?? '', shoppingListItems];
 }
 
 class EditShoppingList extends ShoppingListEvent {
-  final ShoppingList shoppingList;
+  final String id;
+  final String accessId;
+  final String name;
+  final String? description;
+  final List<ShoppingListItem> shoppingListItems;
 
-  const EditShoppingList({required this.shoppingList});
+  const EditShoppingList({
+    required this.id,
+    required this.accessId,
+    required this.name,
+    this.description,
+    required this.shoppingListItems,
+  });
 
   @override
-  List<Object> get props => [shoppingList];
+  List<Object> get props => [id, accessId, name, description ?? '', shoppingListItems];
 }
 
 class DeleteShoppingList extends ShoppingListEvent {
@@ -60,6 +72,22 @@ class FinishShoppingList extends ShoppingListEvent {
 
   @override
   List<Object> get props => [shoppingList];
+}
+
+class CreateItem extends ShoppingListEvent {
+  final String name;
+  final String accessId;
+
+  const CreateItem({
+    required this.name,
+    required this.accessId,
+  });
+
+  @override
+  List<Object> get props => [
+    name,
+    accessId,
+  ];
 }
 
 class CreateShoppingListItem extends ShoppingListEvent {

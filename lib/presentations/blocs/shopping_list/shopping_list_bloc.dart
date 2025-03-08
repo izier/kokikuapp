@@ -1,13 +1,17 @@
+import 'dart:developer';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
+import 'package:kokiku/datas/models/remote/category.dart';
 import 'package:kokiku/datas/models/remote/item.dart';
 import 'package:kokiku/datas/models/remote/shopping_list.dart';
 import 'package:kokiku/datas/models/remote/shopping_list_item.dart';
 import 'package:kokiku/datas/models/remote/user.dart';
+
 part 'shopping_list_event.dart';
 part 'shopping_list_state.dart';
 
@@ -49,13 +53,19 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         }
 
         final accessSnapshot = await _firestore
-            .collection('accessIds')
+            .collection('access_ids')
             .where(FieldPath.documentId, whereIn: userAccessIds)
+            .get();
+        final categoriesSnapshot = await _firestore
+            .collection('categories')
+            .where('accessId', whereIn: userAccessIds)
             .get();
 
         final accessIds = accessSnapshot.docs
             .map((doc) => AccessId.fromFirestore(doc))
             .toList();
+        final categories = categoriesSnapshot.docs.map(
+                (doc) => ItemCategory.fromFirestore(doc)).toList();
 
         final snapshot = await _firestore
             .collection('shopping_lists')
@@ -68,6 +78,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         emit(ShoppingListLoaded(
           accessIds: accessIds,
           shoppingLists: shoppingLists,
+          categories: categories,
         ));
       } catch (e) {
         emit(ShoppingListError(message: 'Failed to load shopping lists: $e'));
@@ -122,7 +133,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         }
 
         final accessSnapshot = await _firestore
-            .collection('accessIds')
+            .collection('access_ids')
             .where(FieldPath.documentId, whereIn: userAccessIds)
             .get();
         final itemSnapshot = await _firestore
@@ -132,7 +143,6 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         final accessIds = accessSnapshot.docs
             .map((doc) => AccessId.fromFirestore(doc))
             .toList();
-
         final items = itemSnapshot.docs.map(
             (doc) => Item.fromFirestore(doc)).toList();
 
@@ -144,13 +154,13 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         final shoppingListItems = snapshot.docs.map(
             (doc) => ShoppingListItem.fromFirestore(doc)).toList();
 
-        emit(ShoppingListDetailLoaded(accessIds: accessIds, items: items, shoppingListItems: shoppingListItems, shoppingListId: event.shoppingListId));
+        emit(ShoppingListDetailLoaded(accessIds: accessIds, items: items, shoppingListItems: shoppingListItems));
       } catch (e) {
         emit(ShoppingListError(message: 'Failed to load items: $e'));
       }
     });
 
-    on<CreateShoppingListItem>((event, emit) async {
+    on<CreateItem>((event, emit) async {
       emit(ShoppingListLoading());
       try {
         final connectivityResult = await Connectivity().checkConnectivity();
@@ -165,74 +175,64 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
           return;
         }
 
-        final existingItemSnapshot = await _firestore
-            .collection('items')
-            .where('name', isEqualTo: event.name)
-            .where('accessId', isEqualTo: event.accessId)
-            .limit(1)
-            .get();
-
-        String itemId;
-        if (existingItemSnapshot.docs.isNotEmpty) {
-          itemId = existingItemSnapshot.docs.first.id;
-        } else {
-          final newItem = Item(name: event.name, accessId: event.accessId, categoryId: event.categoryId!);
-          final newItemRef = await _firestore.collection('items').add(newItem.toMap());
-          itemId = newItemRef.id;
-        }
-
-        final shoppingListItem = ShoppingListItem(
-          shoppingListId: event.shoppingListId,
-          itemId: itemId,
-          name: event.name,
-          quantity: event.quantity,
-          isBought: false,
-          createdAt: Timestamp.now(),
-          accessId: event.accessId,
-        );
-
-        await _firestore.collection('shopping_list_items').add(shoppingListItem.toMap());
+        final newItem = Item(name: event.name, accessId: event.accessId);
+        await _firestore.collection('items').add(newItem.toMap());
 
         emit(CreateShoppingListItemSuccess());
+        add(LoadShoppingListDetail());
+        log(state.toString());
       } catch (e) {
         emit(CreateShoppingListItemError(message: 'Failed to create item: $e'));
       }
     });
 
-    on<AddShoppingListItem>((event, emit) async {
-      emit(ShoppingListLoading());
-      try {
-        final connectivityResult = await Connectivity().checkConnectivity();
-        if (connectivityResult.contains(ConnectivityResult.none)) {
-          emit(ShoppingListNoInternet());
-          return;
-        }
-
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) {
-          emit(ShoppingListError(message: 'User not authenticated'));
-          return;
-        }
-
-        for (final item in event.items) {
-          final shoppingListItem = ShoppingListItem(
-            shoppingListId: event.shoppingListId,
-            itemId: item.id!,
-            name: item.name,
-            quantity: event.quantity[event.items.indexOf(item)],
-            isBought: false,
-            createdAt: Timestamp.now(),
-            accessId: event.accessId,
-          );
-
-          await _firestore.collection('shopping_list_items').add(shoppingListItem.toMap());
-
-        }
-        emit(AddShoppingListItemSuccess());
-      } catch (e) {
-        emit(AddShoppingListItemError(message: 'Failed to add item: $e'));
-      }
-    });
+    // on<AddShoppingListItem>((event, emit) async {
+    //   emit(ShoppingListLoading());
+    //   try {
+    //     final connectivityResult = await Connectivity().checkConnectivity();
+    //     if (connectivityResult.contains(ConnectivityResult.none)) {
+    //       emit(ShoppingListNoInternet());
+    //       return;
+    //     }
+    //
+    //     final user = FirebaseAuth.instance.currentUser;
+    //     if (user == null) {
+    //       emit(ShoppingListError(message: 'User not authenticated'));
+    //       return;
+    //     }
+    //
+    //     final existingItemSnapshot = await _firestore
+    //         .collection('items')
+    //         .where('name', isEqualTo: event.name)
+    //         .where('accessId', isEqualTo: event.accessId)
+    //         .limit(1)
+    //         .get();
+    //
+    //     String itemId;
+    //     if (existingItemSnapshot.docs.isNotEmpty) {
+    //       itemId = existingItemSnapshot.docs.first.id;
+    //     } else {
+    //       final newItem = Item(name: event.name, accessId: event.accessId, categoryId: event.categoryId!);
+    //       final newItemRef = await _firestore.collection('items').add(newItem.toMap());
+    //       itemId = newItemRef.id;
+    //     }
+    //
+    //     final shoppingListItem = ShoppingListItem(
+    //       shoppingListId: event.shoppingListId,
+    //       itemId: itemId,
+    //       name: event.name,
+    //       quantity: event.quantity,
+    //       isBought: false,
+    //       createdAt: Timestamp.now(),
+    //       accessId: event.accessId,
+    //     );
+    //
+    //     await _firestore.collection('shopping_list_items').add(shoppingListItem.toMap());
+    //     emit(AddShoppingListItemSuccess());
+    //   } catch (e) {
+    //     emit(AddShoppingListItemError(message: 'Failed to add item: $e'));
+    //   }
+    // });
 
     on<MarkItemBought>((event, emit) async {
       try {

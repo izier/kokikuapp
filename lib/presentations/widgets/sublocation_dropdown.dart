@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 import 'package:kokiku/datas/models/remote/sublocation.dart';
@@ -22,6 +23,8 @@ class SublocationDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
+    
     if (selectedLocation == null || selectedAccessId == null) {
       return const SizedBox(); // Return empty space if no location is selected
     }
@@ -29,8 +32,8 @@ class SublocationDropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Sublocation',
+        Text(
+          localization.translate('sublocation'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -53,7 +56,7 @@ class SublocationDropdown extends StatelessWidget {
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search sublocation...',
+                hintText: localization.translate('search'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -65,7 +68,7 @@ class SublocationDropdown extends StatelessWidget {
           enabled: true,
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              hintText: 'Select a sublocation',
+              hintText: localization.translate('select_sublocation'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

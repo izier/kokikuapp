@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/presentations/blocs/shopping_list/shopping_list_bloc.dart';
-import 'package:kokiku/presentations/pages/shopping_list/shopping_list_detail_page.dart';
+import 'package:kokiku/presentations/pages/shopping_list/shopping_list_add_edit_page.dart';
+import 'package:kokiku/presentations/widgets/access_id_input.dart';
 
 class ShoppingListPage extends StatefulWidget {
   const ShoppingListPage({super.key});
@@ -25,6 +26,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text('Shopping Lists'),
       ),
       body: BlocBuilder<ShoppingListBloc, ShoppingListState>(
@@ -32,6 +34,11 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           if (state is ShoppingListLoading) {
             return Center(child: CircularProgressIndicator());
           } else if (state is ShoppingListLoaded) {
+            if (state.shoppingLists.isEmpty) {
+              return Center(
+                child: Text('No shopping lists found.'),
+              );
+            }
             return ListView.builder(
               itemCount: state.shoppingLists.length,
               itemBuilder: (context, index) {
@@ -43,7 +50,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ShoppingListDetailPage(
+                        builder: (context) => ShoppingListAddEditPage(
                           shoppingListId: shoppingList.id!,
                           shoppingListName: shoppingList.name,
                           shoppingListDescription: shoppingList.description,
@@ -56,8 +63,14 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
             );
           } else if (state is ShoppingListError) {
             return Center(child: Text(state.message));
+          } if (state is ShoppingListNoAccessIds) {
+            return Center(
+              child: AccessIdInput(),
+            );
           } else {
-            return Container();
+            return Center(
+              child: Text('No shopping lists found.'),
+            );
           }
         },
       ),

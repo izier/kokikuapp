@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 import 'package:kokiku/datas/models/remote/inventory_item.dart';
@@ -16,13 +17,14 @@ import 'package:kokiku/presentations/widgets/custom_toast.dart';
 import 'package:kokiku/presentations/widgets/location_dropdown.dart';
 import 'package:kokiku/presentations/widgets/sublocation_dropdown.dart';
 
-class AddEditItemPage extends StatefulWidget {
+class InventoryAddEditItemPage extends StatefulWidget {
   final InventoryItem? item;
   final List<AccessId>? accessIds;
   final List<ItemCategory>? categories;
   final List<Location>? locations;
   final List<Sublocation>? sublocations;
-  const AddEditItemPage({
+
+  const InventoryAddEditItemPage({
     this.item,
     this.accessIds,
     this.categories,
@@ -32,10 +34,10 @@ class AddEditItemPage extends StatefulWidget {
   });
 
   @override
-  State<AddEditItemPage> createState() => _AddEditItemPageState();
+  State<InventoryAddEditItemPage> createState() => _InventoryAddEditItemPageState();
 }
 
-class _AddEditItemPageState extends State<AddEditItemPage> {
+class _InventoryAddEditItemPageState extends State<InventoryAddEditItemPage> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
@@ -79,21 +81,31 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.item == null ? 'Add Item' : 'Edit Item'),
+        scrolledUnderElevation: 0,
+        title: Text(widget.item == null
+            ? localization.translate('add_item')
+            : localization.translate('edit_item')),
         actions: [
-          widget.item != null ? IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => _showDeleteConfirmationDialog(),
-          ) : Container(),
+          if (widget.item != null)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () => _showDeleteConfirmationDialog(),
+            ),
         ],
       ),
       body: SafeArea(
         child: BlocListener<InventoryBloc, InventoryState>(
           listener: (context, state) {
             if (state is InventoryError) {
-              showErrorToast(context: context, title: 'An Error Has Occured', message: state.message);
+              showErrorToast(
+                  context: context,
+                  title: localization.translate('error_occurred'),
+                  message: state.message
+              );
             }
           },
           child: BlocBuilder<InventoryBloc, InventoryState>(
@@ -110,6 +122,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Access ID Dropdown
                         AccessIdDropdown(
                           accessIds: state.accessIds,
                           selectedAccessId: selectedAccessId,
@@ -119,6 +132,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         ),
                         const SizedBox(height: 16),
 
+                        // Category Dropdown
                         CategoryDropdown(
                           categories: state.categories,
                           selectedCategory: selectedCategory,
@@ -131,13 +145,17 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             }
                           },
                         ),
-                        selectedAccessId != null ?
-                        const SizedBox(height: 16) : Container(),
+                        if (selectedAccessId != null) const SizedBox(height: 16),
 
-                        // Name Text Field
-                        _buildTextField('Name', nameController, 'Enter a name'),
+                        // Item Name
+                        _buildTextField(
+                            localization.translate('name'),
+                            nameController,
+                            localization.translate('enter_name')
+                        ),
                         const SizedBox(height: 16),
 
+                        // Location Dropdown
                         LocationDropdown(
                           selectedAccessId: selectedAccessId,
                           locations: state.locations,
@@ -146,13 +164,16 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             if (value!.id == 'add') {
                               _showAddLocationModal(context);
                             } else {
-                              setState(() => selectedLocation = value);
+                              setState(() {
+                                selectedLocation = value;
+                                selectedSublocation = null;
+                              });
                             }
                           },
                         ),
-                        selectedAccessId != null ?
-                        const SizedBox(height: 16) : Container(),
+                        if (selectedAccessId != null) const SizedBox(height: 16),
 
+                        // Sublocation Dropdown
                         SublocationDropdown(
                           selectedAccessId: selectedAccessId,
                           sublocations: state.sublocations,
@@ -166,34 +187,45 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                             }
                           },
                         ),
-                        selectedLocation != null ?
-                        const SizedBox(height: 16) : Container(),
+                        if (selectedLocation != null) const SizedBox(height: 16),
 
-                        // Quantity Row
-                        _buildQuantityRow(),
+                        // Quantity
+                        _buildQuantityRow(localization),
                         const SizedBox(height: 16),
 
                         // Registration Date
-                        _buildDatePicker(label: 'Registration Date', controller: regDateController, validationMessage: 'Select a registration date'),
+                        _buildDatePicker(
+                            label: localization.translate('registration_date'),
+                            controller: regDateController,
+                            validationMessage: localization.translate('select_registration_date')
+                        ),
                         const SizedBox(height: 16),
 
                         // Expiry Date
-                        _buildDatePicker(label: 'Expiry Date', controller: expDateController, validationMessage: 'Select an expiry date'),
+                        _buildDatePicker(
+                            label: localization.translate('expiry_date'),
+                            controller: expDateController,
+                            validationMessage: localization.translate('select_expiry_date')
+                        ),
                         const SizedBox(height: 16),
 
                         // Description
-                        _buildTextField('Description', descriptionController, null),
+                        _buildTextField(
+                            localization.translate('description'),
+                            descriptionController,
+                            null
+                        ),
                         const SizedBox(height: 16),
 
                         // Submit Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {
-                              _submitForm();
-                            },
+                            onPressed: _submitForm,
                             child: Text(
-                              widget.item == null ? 'Add Item' : 'Save Changes',
+                              widget.item == null
+                                  ? localization.translate('add_item')
+                                  : localization.translate('save_changes'),
                             ),
                           ),
                         ),
@@ -211,6 +243,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller, String? validationMessage, {bool isNumber = false}) {
+    final localization = LocalizationService.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -224,7 +257,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               return validationMessage;
             }
             if (isNumber && int.tryParse(value) == null) {
-              return 'Please enter a valid number.';
+              return localization.translate('invalid_number');
             }
             return null;
           },
@@ -240,10 +273,10 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
     );
   }
 
-  Widget _buildQuantityRow() {
+  Widget _buildQuantityRow(LocalizationService localization) {
     return Row(
       children: [
-        const Text('Quantity', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(localization.translate('quantity'), style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(width: 16),
         IconButton(
           onPressed: () {
@@ -254,7 +287,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               });
             }
           },
-          icon: const Icon(Icons.remove),
+          icon: Icon(Icons.remove),
         ),
         Expanded(
           child: TextField(
@@ -262,11 +295,11 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: 'Quantity',
+              hintText: localization.translate('quantity'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              contentPadding: EdgeInsets.symmetric(vertical: 12),
             ),
           ),
         ),
@@ -277,7 +310,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               quantityController.text = (currentQuantity + 1).toString();
             });
           },
-          icon: const Icon(Icons.add),
+          icon: Icon(Icons.add),
         ),
       ],
     );
@@ -335,25 +368,6 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
 
   void _submitForm() {
     if (formKey.currentState!.validate()) {
-      // if (selectedCategory == null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Please select a category.')),
-      //   );
-      //   return;
-      // }
-      // if (selectedLocation == null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Please select a location.')),
-      //   );
-      //   return;
-      // }
-      // if (selectedSublocation == null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Please select a sublocation.')),
-      //   );
-      //   return;
-      // }
-
       // Submit the item
       if (widget.item == null) {
         context.read<InventoryBloc>().add(AddInventoryItem(
@@ -379,6 +393,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
           regDate: parseDateToTimestamp(regDateController.text),
           expDate: parseDateToTimestamp(expDateController.text),
           accessId: selectedAccessId!.id,
+          itemId: widget.item?.itemId,
         ));
       }
 
@@ -389,6 +404,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   void _showAddCategoryModal(BuildContext context) {
     final controller = TextEditingController();
     final focusNode = FocusNode();
+    final localization = LocalizationService.of(context)!;
 
     // Show the bottom sheet
     showDialog(
@@ -398,7 +414,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
           focusNode.requestFocus();
         });
         return AlertDialog(
-          title: Text('Create Category'),
+          title: Text(localization.translate('create_category')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -406,8 +422,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                 focusNode: focusNode,
                 controller: controller,
                 decoration: InputDecoration(
-                  label: Text('Category Name'),
-                  hintText: 'Enter category name',
+                  label: Text(localization.translate('category_name')),
+                  hintText: localization.translate('enter_category_name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -425,7 +441,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                     Navigator.pop(
                         context); // Close the bottom sheet after adding
                   },
-                  child: const Text('Add'),
+                  child: Text(localization.translate('add')),
                 ),
               ),
             ],
@@ -434,9 +450,11 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
       }
     );
   }
+
   void _showAddLocationModal(BuildContext context) {
     final controller = TextEditingController();
     final focusNode = FocusNode();
+    final localization = LocalizationService.of(context)!;
 
     showDialog(
       context: context,
@@ -445,7 +463,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
           focusNode.requestFocus();
         });
         return AlertDialog(
-          title: Text('Create Location'),
+          title: Text(localization.translate('create_location')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -453,8 +471,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                 focusNode: focusNode,
                 controller: controller,
                 decoration: InputDecoration(
-                  label: Text('Location Name'),
-                  hintText: 'Enter location name',
+                  label: Text(localization.translate('location_name')),
+                  hintText: localization.translate('enter_location_name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -471,7 +489,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         AddLocation(controller.text.trim(), selectedAccessId!.id));
                     Navigator.pop(context);
                   },
-                  child: const Text('Add'),
+                  child: Text(localization.translate('add')),
                 ),
               ),
             ],
@@ -484,6 +502,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   void _showAddSublocationModal(BuildContext context, String locationId) {
     final controller = TextEditingController();
     final focusNode = FocusNode();
+    final localization = LocalizationService.of(context)!;
 
     showDialog(
       context: context,
@@ -492,7 +511,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
           focusNode.requestFocus();
         });
         return AlertDialog(
-          title: Text('Create Sublocation'),
+          title: Text(localization.translate('create_sublocation')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -500,8 +519,8 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                 focusNode: focusNode,
                 controller: controller,
                 decoration: InputDecoration(
-                  label: Text('Sublocation Name'),
-                  hintText: 'Enter sublocation name',
+                  label: Text(localization.translate('sublocation_name')),
+                  hintText: localization.translate('enter_sublocation_name'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -518,7 +537,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
                         AddSublocation(locationId, controller.text.trim(), selectedAccessId!.id));
                     Navigator.pop(context);
                   },
-                  child: const Text('Add'),
+                  child: Text(localization.translate('add')),
                 ),
               ),
             ],
@@ -529,16 +548,18 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
   }
 
   void _showDeleteConfirmationDialog() {
+    final localization = LocalizationService.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this item?'),
+        title: Text(localization.translate('delete_item')),
+        content: Text(localization.translate('delete_item_confirmation')),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(localization.translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () {
@@ -546,7 +567,7 @@ class _AddEditItemPageState extends State<AddEditItemPage> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Delete'),
+            child: Text(localization.translate('delete')),
           ),
         ],
       ),

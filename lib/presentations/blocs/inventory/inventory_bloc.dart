@@ -57,7 +57,7 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
         }
 
         final accessSnapshot = await _firestore
-            .collection('accessIds')
+            .collection('access_ids')
             .where(FieldPath.documentId, whereIn: userAccessIds)
             .get();
         final categoriesSnapshot = await _firestore
@@ -192,13 +192,10 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
           return;
         }
 
-        final item = Item(
-          name: event.name,
-          accessId: event.accessId,
-        );
+        log(event.itemId!);
 
-        await _firestore.collection('inventory_items').doc(event.id)
-            .update(item.toMap());
+        final newItem = Item(name: event.name, accessId: event.accessId);
+        await _firestore.collection('items').doc(event.itemId).update(newItem.toMap());
 
         final inventoryItem = InventoryItem(
           name: event.name,
@@ -209,6 +206,7 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
           expDate: event.expDate,
           locationId: event.locationId,
           sublocationId: event.sublocationId,
+          itemId: event.itemId,
           accessId: event.accessId,
         );
 
@@ -293,10 +291,10 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
           createdAt: DateTime.now(),
         );
 
-        await _firestore.collection('accessIds').doc(newAccessId).set(newAccess.toFirestore());
+        await _firestore.collection('access_ids').doc(newAccessId).set(newAccess.toFirestore());
 
         await _firestore.collection('users').doc(user.uid).update({
-          'accessIds': FieldValue.arrayUnion([newAccessId])
+          'access_ids': FieldValue.arrayUnion([newAccessId])
         });
         emit(AddAccessIdSuccess());
         add(LoadInventory());
@@ -325,7 +323,7 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
         String? accessId = event.accessId;
 
         await _firestore.collection('users').doc(user.uid).update({
-          'accessIds': FieldValue.arrayUnion([accessId])
+          'access_ids': FieldValue.arrayUnion([accessId])
         });
         emit(AddAccessIdSuccess());
         add(LoadInventory());

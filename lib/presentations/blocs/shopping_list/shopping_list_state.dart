@@ -22,8 +22,13 @@ class ShoppingListNoInternet extends ShoppingListState {
 class ShoppingListLoaded extends ShoppingListState {
   final List<AccessId> accessIds;
   final List<ShoppingList> shoppingLists;
+  final List<ItemCategory> categories;
 
-  const ShoppingListLoaded({required this.accessIds, required this.shoppingLists});
+  const ShoppingListLoaded({
+    required this.accessIds,
+    required this.shoppingLists,
+    required this.categories,
+  });
 
   @override
   List<Object> get props => [accessIds, shoppingLists];
@@ -46,17 +51,15 @@ class ShoppingListDetailLoaded extends ShoppingListState {
   final List<AccessId> accessIds;
   final List<ShoppingListItem> shoppingListItems;
   final List<Item> items;
-  final String shoppingListId;
 
   const ShoppingListDetailLoaded({
     required this.accessIds,
     required this.shoppingListItems,
     required this.items,
-    required this.shoppingListId,
   });
 
   @override
-  List<Object> get props => [accessIds, shoppingListItems, shoppingListId];
+  List<Object> get props => [accessIds, shoppingListItems];
 }
 
 class ShoppingListDetailLoadError extends ShoppingListState {

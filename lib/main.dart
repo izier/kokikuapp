@@ -12,13 +12,15 @@ import 'package:kokiku/locator.dart';
 import 'package:kokiku/presentations/blocs/inventory/inventory_bloc.dart';
 import 'package:kokiku/presentations/blocs/profile/profile_bloc.dart';
 import 'package:kokiku/presentations/blocs/shopping_list/shopping_list_bloc.dart';
-import 'package:kokiku/presentations/pages/inventory/add_edit_item_page.dart';
+import 'package:kokiku/presentations/pages/inventory/inventory_add_edit_item_page.dart';
 import 'package:kokiku/presentations/pages/inventory/inventory_page.dart';
 import 'package:kokiku/presentations/pages/inventory/inventory_settings_page.dart';
 import 'package:kokiku/presentations/pages/main_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/landing_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/onboarding_page.dart';
 import 'package:kokiku/presentations/pages/profile/profile_page.dart';
+import 'package:kokiku/presentations/pages/shopping_list/shopping_list_add_edit_page.dart';
+import 'package:kokiku/presentations/pages/shopping_list/shopping_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
@@ -100,13 +102,13 @@ class _MyAppState extends State<MyApp> {
         routes: {
           '/': (context) => MainPage(),
           '/inventory': (context) => InventoryPage(),
-          // '/shopping': (context) => ShoppingListPage(),
           '/profile': (context) => ProfilePage(),
           '/onboarding': (context) => OnboardingPage(),
           '/landing': (context) => LandingPage(),
           '/inventorysettings': (context) => InventorySettingsPage(),
-          '/addedit': (context) => AddEditItemPage(),
-          // '/shoppinglist': (context) => ShoppingListPage(),
+          '/addedit': (context) => InventoryAddEditItemPage(),
+          '/shoppinglist': (context) => ShoppingListPage(),
+          '/shoppinglistaddedit': (context) => ShoppingListAddEditPage(),
         },
       ),
     );

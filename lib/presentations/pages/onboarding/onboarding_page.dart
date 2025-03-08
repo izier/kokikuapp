@@ -91,9 +91,6 @@ class OnboardingPageState extends State<OnboardingPage> {
                   onPressed: _onSkipPressed,
                   child: Text(
                     localizations.translate('skip'),
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                    ),
                   ),
                 ),
                 // Next or Get Started Button

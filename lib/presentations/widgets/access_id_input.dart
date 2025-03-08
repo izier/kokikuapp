@@ -48,10 +48,10 @@ class _AccessIdInputState extends State<AccessIdInput> {
     );
 
     try {
-      await _firestore.collection('accessIds').doc(newAccessId).set(newAccess.toFirestore());
+      await _firestore.collection('access_ids').doc(newAccessId).set(newAccess.toFirestore());
 
       await _firestore.collection('users').doc(user.uid).update({
-        'accessIds': FieldValue.arrayUnion([newAccessId])
+        'access_ids': FieldValue.arrayUnion([newAccessId])
       });
 
       showSuccessToast(
@@ -90,11 +90,11 @@ class _AccessIdInputState extends State<AccessIdInput> {
     if (user == null) return;
 
     try {
-      var accessIdDoc = await _firestore.collection('accessIds').doc(scannedCode).get();
+      var accessIdDoc = await _firestore.collection('access_ids').doc(scannedCode).get();
 
       if (accessIdDoc.exists) {
         await _firestore.collection('users').doc(user.uid).update({
-          'accessIds': FieldValue.arrayUnion([scannedCode])
+          'access_ids': FieldValue.arrayUnion([scannedCode])
         });
         showSuccessToast(
           context: context,

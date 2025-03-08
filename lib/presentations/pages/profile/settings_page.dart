@@ -86,6 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final LocalizationService localizations = LocalizationService.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text(localizations.translate('settings')),
       ),
       body: ListView(

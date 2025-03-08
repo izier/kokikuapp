@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/location.dart';
 
@@ -21,6 +22,7 @@ class LocationDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
     List<Location> usedList;
 
     if (selectedAccessId == null) {
@@ -41,8 +43,8 @@ class LocationDropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Location',
+        Text(
+          localization.translate('location'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -58,7 +60,7 @@ class LocationDropdown extends StatelessWidget {
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search location...',
+                hintText: localization.translate('search'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -70,7 +72,7 @@ class LocationDropdown extends StatelessWidget {
           enabled: true,
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              hintText: 'Select a location',
+              hintText: localization.translate('select_location'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
 import 'package:kokiku/datas/models/remote/category.dart';
 
@@ -19,6 +20,8 @@ class CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localization = LocalizationService.of(context)!;
+
     if (selectedAccessId == null) {
       return const SizedBox();
     }
@@ -26,8 +29,8 @@ class CategoryDropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Category',
+        Text(
+          localization.translate('category'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -46,7 +49,7 @@ class CategoryDropdown extends StatelessWidget {
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
-                hintText: 'Search',
+                hintText: localization.translate('search'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -58,7 +61,7 @@ class CategoryDropdown extends StatelessWidget {
           enabled: true,
           decoratorProps: DropDownDecoratorProps(
             decoration: InputDecoration(
-              hintText: 'Select a category',
+              hintText: localization.translate('select_category'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
