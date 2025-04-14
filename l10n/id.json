@@ -114,5 +114,18 @@
   "enter_location_name": "Masukkan nama lokasi",
   "create_sublocation": "Buat Sub-lokasi",
   "sublocation_name": "Nama Sub-lokasi",
-  "enter_sublocation_name": "Masukkan nama sub-lokasi"
+  "enter_sublocation_name": "Masukkan nama sub-lokasi",
+  "register": "Buat Akun",
+  "email": "Email",
+  "password": "Kata Sandi",
+  "continue_with_google": "Lanjutkan dengan Google",
+  "no_account": "Belum punya akun?",
+  "have_account": "Sudah punya akun?",
+  "emptyFields": "Harap isi semua bidang.",
+  "invalidEmail": "Email tidak valid.",
+  "passwordTooShort": "Kata sandi harus memiliki setidaknya 6 karakter.",
+  "emptyEmail": "Email tidak boleh kosong.",
+  "emptyPassword": "Kata sandi tidak boleh kosong.",
+  "success": "Sukses",
+  "accountCreated": "Akun berhasil dibuat."
 }

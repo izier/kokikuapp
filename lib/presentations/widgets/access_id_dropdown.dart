@@ -39,6 +39,9 @@ class AccessIdDropdown extends StatelessWidget {
           onChanged: onChanged,
           popupProps: PopupProps.menu(
             fit: FlexFit.loose,
+            menuProps: MenuProps(
+              backgroundColor: Colors.white
+            ),
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
                 hintText: localization.translate('search'),

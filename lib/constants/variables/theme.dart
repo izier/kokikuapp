@@ -1,51 +1,84 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFFF83B46); // Logo color
-  static const Color secondaryColor = Color(0xFFFA6A73); // Slightly muted complementary color
-  static const Color backgroundColorLight = Colors.white; // Light background (off-white)
-  static const Color backgroundColorDark = Color(0xFF121212); // Dark background (very dark gray)
-  static const Color lightGrey = Color(0xFFE0E0E0); // Soft grey background
+  static const Color primaryColor = Color(0xFFF83B46); // Pure Red
+  static const Color secondaryColor = Color(0xFFFA6A73); // Lighter Red
+  static const Color backgroundColorLight = Colors.white;
+  static const Color backgroundColorDark = Color(0xFF121212);
+  static const Color lightGrey = Color(0xFFF5F5F5);
+  static const Color darkGrey = Color(0xFF303030);
+  static const Color textColorLight = Colors.black87;
+  static const Color textColorDark = Colors.white;
 
   static const TextStyle _baseTextStyle = TextStyle(
-    fontFamily: 'Nunito',
+    fontFamily: 'Inter',
     fontSize: 16,
     fontWeight: FontWeight.w400,
   );
 
   static const TextStyle _headingTextStyle = TextStyle(
-    fontFamily: 'Poppins',
-    fontSize: 16,
-    fontWeight: FontWeight.w500,
+    fontFamily: 'Inter',
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
   );
 
-  // Light Theme
   static ThemeData lightTheme = ThemeData(
+    canvasColor: Colors.white,
+    dialogBackgroundColor: Colors.white,
     brightness: Brightness.light,
     primaryColor: primaryColor,
     scaffoldBackgroundColor: backgroundColorLight,
     appBarTheme: AppBarTheme(
       backgroundColor: backgroundColorLight,
-      foregroundColor: Colors.black,
+      foregroundColor: textColorLight,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: _headingTextStyle.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 18,
-        color: Colors.black,
-      ),
+      titleTextStyle: _headingTextStyle.copyWith(color: textColorLight),
+    ),
+    cardTheme: CardTheme(
+      color: Colors.white,
+      shadowColor: Colors.black12,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
       foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+    ),
+    dialogTheme: DialogTheme(
+      backgroundColor: backgroundColorLight,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: primaryColor,
+      unselectedItemColor: Colors.black54,
+      elevation: 4,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.all(primaryColor),
+      trackColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? secondaryColor : Colors.grey,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        iconColor: Colors.white,
         textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.bold),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        iconColor: Colors.white
+        elevation: 2,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
+        side: BorderSide(color: primaryColor, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -54,48 +87,27 @@ class AppTheme {
         textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
       ),
     ),
-    colorScheme: ColorScheme.light(
-      primary: primaryColor,
-      secondary: secondaryColor,
-      onPrimary: Colors.white,
-      surface: backgroundColorLight,
-      onSurface: Colors.black,
-    ),
-    textTheme: TextTheme(
-      displayLarge: _headingTextStyle.copyWith(fontSize: 42, color: Colors.black),
-      displayMedium: _headingTextStyle.copyWith(fontSize: 36, color: Colors.black),
-      displaySmall: _headingTextStyle.copyWith(fontSize: 30, color: Colors.black),
-      headlineLarge: _headingTextStyle.copyWith(fontSize: 26, color: Colors.black),
-      headlineMedium: _headingTextStyle.copyWith(fontSize: 22, color: Colors.black),
-      headlineSmall: _headingTextStyle.copyWith(fontSize: 20, color: Colors.black),
-      titleLarge: _baseTextStyle.copyWith(fontSize: 18),
-      titleMedium: _baseTextStyle.copyWith(fontSize: 16),
-      titleSmall: _baseTextStyle.copyWith(fontSize: 14),
-      bodyLarge: _baseTextStyle.copyWith(fontSize: 16),
-      bodyMedium: _baseTextStyle.copyWith(fontSize: 14),
-      bodySmall: _baseTextStyle.copyWith(fontSize: 12),
-      labelLarge: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-      labelMedium: _baseTextStyle.copyWith(fontSize: 12),
-      labelSmall: _baseTextStyle.copyWith(fontSize: 10),
-    ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: backgroundColorLight,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: Colors.grey,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-    ),
     inputDecorationTheme: InputDecorationTheme(
-      labelStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
+      filled: true,
+      fillColor: lightGrey,
       hintStyle: TextStyle(color: Colors.black54),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: primaryColor),
-        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(10),
       ),
       border: OutlineInputBorder(
         borderSide: BorderSide(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: primaryColor,
+      linearTrackColor: Colors.grey[300],
+      circularTrackColor: Colors.grey[300],
     ),
     expansionTileTheme: ExpansionTileThemeData(
       collapsedBackgroundColor: Colors.transparent,
@@ -103,41 +115,70 @@ class AppTheme {
       iconColor: primaryColor,
       collapsedIconColor: Colors.black,
     ),
-    dropdownMenuTheme: DropdownMenuThemeData(
-      textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      shadowColor: Colors.black,
+    tabBarTheme: TabBarTheme(
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: primaryColor, width: 3),
+      ),
+      labelColor: primaryColor,
+      unselectedLabelColor: Colors.grey[600],
     ),
   );
 
-  // Dark Theme
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: primaryColor,
     scaffoldBackgroundColor: backgroundColorDark,
     appBarTheme: AppBarTheme(
       backgroundColor: backgroundColorDark,
-      foregroundColor: Colors.white,
+      foregroundColor: textColorDark,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: _headingTextStyle.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 18,
-        color: Colors.white,
-      ),
+      titleTextStyle: _headingTextStyle.copyWith(color: textColorDark),
+    ),
+    cardTheme: CardTheme(
+      color: darkGrey,
+      shadowColor: Colors.black54,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: primaryColor,
       foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+    ),
+    dialogTheme: DialogTheme(
+      backgroundColor: backgroundColorDark,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: darkGrey,
+      selectedItemColor: primaryColor,
+      unselectedItemColor: Colors.white54,
+      elevation: 4,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.all(primaryColor),
+      trackColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? secondaryColor : Colors.grey,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
+        iconColor: Colors.white,
+        textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.bold),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        iconColor: Colors.white
+        elevation: 2,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
+        side: BorderSide(color: primaryColor, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
@@ -146,48 +187,27 @@ class AppTheme {
         textStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
       ),
     ),
-    colorScheme: ColorScheme.dark(
-      primary: primaryColor,
-      secondary: secondaryColor,
-      onPrimary: Colors.white,
-      surface: backgroundColorDark,
-      onSurface: Colors.white,
-    ),
-    textTheme: TextTheme(
-      displayLarge: _headingTextStyle.copyWith(fontSize: 42, color: Colors.white),
-      displayMedium: _headingTextStyle.copyWith(fontSize: 36, color: Colors.white),
-      displaySmall: _headingTextStyle.copyWith(fontSize: 30, color: Colors.white),
-      headlineLarge: _headingTextStyle.copyWith(fontSize: 26, color: Colors.white),
-      headlineMedium: _headingTextStyle.copyWith(fontSize: 22, color: Colors.white),
-      headlineSmall: _headingTextStyle.copyWith(fontSize: 20, color: Colors.white),
-      titleLarge: _baseTextStyle.copyWith(fontSize: 18, color: Colors.white),
-      titleMedium: _baseTextStyle.copyWith(fontSize: 16, color: Colors.white),
-      titleSmall: _baseTextStyle.copyWith(fontSize: 14, color: Colors.white),
-      bodyLarge: _baseTextStyle.copyWith(fontSize: 16, color: Colors.white),
-      bodyMedium: _baseTextStyle.copyWith(fontSize: 14, color: Colors.white),
-      bodySmall: _baseTextStyle.copyWith(fontSize: 12, color: Colors.white),
-      labelLarge: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-      labelMedium: _baseTextStyle.copyWith(fontSize: 12, color: Colors.white),
-      labelSmall: _baseTextStyle.copyWith(fontSize: 10, color: Colors.white),
-    ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: backgroundColorDark,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: Colors.grey,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-    ),
     inputDecorationTheme: InputDecorationTheme(
-      labelStyle: _baseTextStyle.copyWith(fontWeight: FontWeight.w500),
-      hintStyle: TextStyle(color: Colors.white70),
+      filled: true,
+      fillColor: darkGrey,
+      hintStyle: TextStyle(color: Colors.white60),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: primaryColor),
-        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey[600]!),
+        borderRadius: BorderRadius.circular(10),
       ),
       border: OutlineInputBorder(
         borderSide: BorderSide(color: Colors.grey[600]!),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: primaryColor,
+      linearTrackColor: Colors.grey[300],
+      circularTrackColor: Colors.grey[300],
     ),
     expansionTileTheme: ExpansionTileThemeData(
       collapsedBackgroundColor: Colors.transparent,
@@ -195,11 +215,12 @@ class AppTheme {
       iconColor: primaryColor,
       collapsedIconColor: Colors.white,
     ),
-    dropdownMenuTheme: DropdownMenuThemeData(
-      textStyle: _baseTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
-    ),
-    cardTheme: CardThemeData(
-      color: backgroundColorDark,
+    tabBarTheme: TabBarTheme(
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: primaryColor, width: 3),
+      ),
+      labelColor: primaryColor,
+      unselectedLabelColor: Colors.grey[600],
     ),
   );
 }

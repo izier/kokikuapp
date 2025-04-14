@@ -105,7 +105,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
           description: event.description,
           createdAt: Timestamp.now(),
           accessId: event.accessId,
-          items: [],
+          items: event.shoppingListItems,
         );
 
         await _firestore.collection('shopping_lists').add(newShoppingList.toMap());

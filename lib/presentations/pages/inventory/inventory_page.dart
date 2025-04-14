@@ -282,7 +282,6 @@ class _InventoryPageState extends State<InventoryPage> {
   Widget _buildSearchAndFilterSection(InventoryLoaded state) {
     final localization = LocalizationService.of(context)!;
     return Container(
-      color: Theme.of(context).cardTheme.color,
       padding: const EdgeInsets.only(left: 16.0, right: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,6 +311,7 @@ class _InventoryPageState extends State<InventoryPage> {
               Row(
                 children: [
                   DropdownButton<String>(
+                    dropdownColor: Colors.white,
                     value: selectedFilterType,
                     hint: Text(localization.translate('filter_by')),
                     items: [

@@ -87,7 +87,6 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final LocalizationService localizations = LocalizationService.of(context)!;
@@ -149,7 +148,7 @@ class _LandingPageState extends State<LandingPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigate to get started
+                        Navigator.pushNamed(context, '/register');
                       },
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
@@ -163,7 +162,7 @@ class _LandingPageState extends State<LandingPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigate to login
+                        Navigator.pushNamed(context, '/login');
                       },
                       style: ElevatedButton.styleFrom(
                         elevation: 0,

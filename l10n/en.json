@@ -115,4 +115,17 @@
   "create_sublocation": "Create Sublocation",
   "sublocation_name": "Sublocation Name",
   "enter_sublocation_name": "Enter sublocation name",
+  "register": "Create Account",
+  "email": "Email",
+  "password": "Password",
+  "continue_with_google": "Continue with Google",
+  "no_account": "Don't have an account?",
+  "have_account": "Already have an account?",
+  "emptyFields": "Please fill in all fields.",
+  "invalidEmail": "Invalid email format.",
+  "passwordTooShort": "Password must be at least 6 characters long.",
+  "emptyEmail": "Email cannot be empty.",
+  "emptyPassword": "Password cannot be empty.",
+  "success": "Success",
+  "accountCreated": "Account successfully created."
 }

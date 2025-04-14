@@ -57,6 +57,9 @@ class LocationDropdown extends StatelessWidget {
           itemAsString: (item) => item.name,
           onChanged: onChanged,
           popupProps: PopupProps.menu(
+            menuProps: MenuProps(
+                backgroundColor: Colors.white
+            ),
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(

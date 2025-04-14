@@ -16,8 +16,10 @@ import 'package:kokiku/presentations/pages/inventory/inventory_add_edit_item_pag
 import 'package:kokiku/presentations/pages/inventory/inventory_page.dart';
 import 'package:kokiku/presentations/pages/inventory/inventory_settings_page.dart';
 import 'package:kokiku/presentations/pages/main_page.dart';
+import 'package:kokiku/presentations/pages/onboarding/login_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/landing_page.dart';
 import 'package:kokiku/presentations/pages/onboarding/onboarding_page.dart';
+import 'package:kokiku/presentations/pages/onboarding/register_page.dart';
 import 'package:kokiku/presentations/pages/profile/profile_page.dart';
 import 'package:kokiku/presentations/pages/shopping_list/shopping_list_add_edit_page.dart';
 import 'package:kokiku/presentations/pages/shopping_list/shopping_list_page.dart';
@@ -78,7 +80,6 @@ class _MyAppState extends State<MyApp> {
       providers: [
         BlocProvider(create: (_) => ProfileBloc()),
         BlocProvider(create: (_) => InventoryBloc()),
-        // BlocProvider(create: (_) => ItemBloc()),
         BlocProvider(create: (_) => ShoppingListBloc()),
       ],
       child: MaterialApp(
@@ -101,6 +102,8 @@ class _MyAppState extends State<MyApp> {
         initialRoute: _determineInitialRoute(),
         routes: {
           '/': (context) => MainPage(),
+          '/login': (context) => LoginPage(),
+          '/register': (context) => RegisterPage(),
           '/inventory': (context) => InventoryPage(),
           '/profile': (context) => ProfilePage(),
           '/onboarding': (context) => OnboardingPage(),

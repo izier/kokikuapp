@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kokiku/datas/models/remote/shopping_list_item.dart';
 
 class ShoppingList {
   final String? id;
@@ -6,7 +7,7 @@ class ShoppingList {
   final String name;
   final String? description;
   final Timestamp createdAt;
-  final List<String> items;
+  final List<ShoppingListItem> items;
 
   ShoppingList({
     this.id,
@@ -25,7 +26,9 @@ class ShoppingList {
       name: data['name'],
       description: data['description'], // Nullable field
       createdAt: data['createdAt'],
-      items: List<String>.from(data['items'] ?? []),
+      items: (data['items'] as List<dynamic>)
+          .map((item) => ShoppingListItem.fromMap(item)) // ✅ Convert to ShoppingListItem
+          .toList(),
     );
   }
 
@@ -35,7 +38,7 @@ class ShoppingList {
       'name': name,
       'description': description, // Nullable field
       'createdAt': createdAt,
-      'items': items,
+      'items': items.map((item) => item.toMap()).toList(),
     };
   }
 
@@ -45,7 +48,7 @@ class ShoppingList {
     String? name,
     String? description,
     Timestamp? createdAt,
-    List<String>? items,
+    List<ShoppingListItem>? items,
   }) {
     return ShoppingList(
       id: id ?? this.id,

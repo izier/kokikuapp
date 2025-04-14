@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kokiku/constants/services/localization_service.dart';
 import 'package:kokiku/datas/models/remote/access_id.dart';
+import 'package:kokiku/datas/models/remote/shopping_list_item.dart';
 import 'package:kokiku/presentations/blocs/shopping_list/shopping_list_bloc.dart';
 import 'package:kokiku/presentations/widgets/access_id_dropdown.dart';
 
@@ -23,7 +26,8 @@ class ShoppingListAddEditPage extends StatefulWidget {
 
 class _ShoppingListAddEditPageState extends State<ShoppingListAddEditPage> {
   AccessId? selectedAccessId;
-  Map<String, TextEditingController> quantityControllers = {};
+  Map<String, ValueNotifier<int>> quantityNotifiers = {};
+  Map<String, ShoppingListItem> selectedItems = {};
   String searchQuery = "";
 
   late TextEditingController nameController = TextEditingController(text: widget.shoppingListName);
@@ -45,7 +49,9 @@ class _ShoppingListAddEditPageState extends State<ShoppingListAddEditPage> {
     nameController.dispose();
     descriptionController.dispose();
     searchController.dispose();
-    quantityControllers.values.forEach((controller) => controller.dispose());
+    for (var notifier in quantityNotifiers.values) {
+      notifier.dispose();
+    }
     super.dispose();
   }
 
@@ -167,45 +173,64 @@ class _ShoppingListAddEditPageState extends State<ShoppingListAddEditPage> {
                       itemCount: filteredItems.length,
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];
-                        quantityControllers.putIfAbsent(item.id!, () => TextEditingController(text: '0'));
+                        quantityNotifiers.putIfAbsent(item.id!, () => ValueNotifier<int>(0));
+                        quantityNotifiers[item.id]!.addListener(() {
+                          final quantity = quantityNotifiers[item.id]!.value;
+                          if (quantity > 0) {
+                            selectedItems[item.id!] = ShoppingListItem(
+                              id: item.id!,
+                              name: item.name,
+                              quantity: quantity,
+                              isBought: false,
+                            );
+                          } else {
+                            selectedItems.remove(item.id!);
+                          }
+                        });
+
                         return ListTile(
-                          contentPadding: EdgeInsets.only(left: 16),
                           title: Text(item.name),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.remove),
-                                onPressed: () {
-                                  setState(() {
-                                    final currentValue = int.tryParse(quantityControllers[item.id]!.text) ?? 0;
-                                    if (currentValue > 0) {
-                                      quantityControllers[item.id]!.text = (currentValue - 1).toString();
-                                    }
-                                  });
-                                },
-                              ),
-                              SizedBox(
-                                width: 40,
-                                child: TextFormField(
-                                  controller: quantityControllers[item.id],
-                                  textAlign: TextAlign.center,
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (value) {
-                                    setState(() {});
-                                  },
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.add),
-                                onPressed: () {
-                                  setState(() {
-                                    final currentValue = int.tryParse(quantityControllers[item.id]!.text) ?? 0;
-                                    quantityControllers[item.id]!.text = (currentValue + 1).toString();
-                                  });
-                                },
-                              ),
-                            ],
+                          trailing: ValueListenableBuilder<int>(
+                            valueListenable: quantityNotifiers[item.id]!,
+                            builder: (context, value, child) {
+                              final controller = TextEditingController(text: value.toString());
+
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.remove),
+                                    onPressed: () {
+                                      if (value > 0) {
+                                        quantityNotifiers[item.id]!.value = value - 1;
+                                      }
+                                    },
+                                  ),
+
+                                  SizedBox(
+                                    width: 50,
+                                    child: TextFormField(
+                                      textAlign: TextAlign.center,
+                                      keyboardType: TextInputType.number,
+                                      controller: controller,
+                                      onChanged: (text) {
+                                        final int? newValue = int.tryParse(text);
+                                        if (newValue != null && newValue >= 0) {
+                                          quantityNotifiers[item.id]!.value = newValue;
+                                        }
+                                      },
+                                    ),
+                                  ),
+
+                                  IconButton(
+                                    icon: Icon(Icons.add),
+                                    onPressed: () {
+                                      quantityNotifiers[item.id]!.value = value + 1;
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         );
                       },
@@ -245,5 +270,12 @@ class _ShoppingListAddEditPageState extends State<ShoppingListAddEditPage> {
     );
   }
 
-  void _saveChanges() {}
+  void _saveChanges() {
+    context.read<ShoppingListBloc>().add(AddShoppingList(
+      accessId: selectedAccessId!.id,
+      name: nameController.text,
+      description: descriptionController.text,
+      shoppingListItems: selectedItems.values.toList())
+    );
+  }
 }

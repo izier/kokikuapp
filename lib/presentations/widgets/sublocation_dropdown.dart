@@ -53,6 +53,9 @@ class SublocationDropdown extends StatelessWidget {
             onChanged(selected); // Call onChanged with Sublocation object
           },
           popupProps: PopupProps.menu(
+            menuProps: MenuProps(
+                backgroundColor: Colors.white
+            ),
             fit: FlexFit.loose,
             searchFieldProps: TextFieldProps(
               decoration: InputDecoration(
